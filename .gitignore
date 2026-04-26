@@ -1,0 +1,13 @@
+.gradle/
+build/
+out/
+*.log
+*.iml
+.idea/
+.classpath
+.project
+.settings/
+runs/
+extra-mods/
+extra-api/
+src/generated/resources/

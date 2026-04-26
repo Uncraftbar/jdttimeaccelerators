@@ -1,0 +1,92 @@
+plugins {
+    id 'java-library'
+    id 'eclipse'
+    id 'idea'
+    id 'maven-publish'
+    id 'net.neoforged.moddev' version '2.0.137'
+}
+
+version = mod_version
+group = mod_group_id
+
+base { archivesName = mod_id }
+
+def extraModsDir = "extra-mods"
+def extraAPIDir = "extra-api"
+
+repositories {
+    mavenLocal()
+    flatDir { name "extra-mods"; dir file(extraModsDir) }
+    flatDir { name "extra-api"; dir file(extraAPIDir) }
+    maven {
+        url 'https://maven.blamejared.com'
+        content { includeGroup "vazkii.patchouli"; includeGroup "mezz.jei" }
+    }
+    maven { url = 'https://raw.githubusercontent.com/Fuzss/modresources/main/maven/' }
+    maven { url = 'https://modmaven.dev/'; content { includeGroup "mekanism"; includeGroup "appeng" } }
+    maven { url = "https://www.cursemaven.com" }
+}
+
+java {
+    toolchain { languageVersion.set(JavaLanguageVersion.of(21)) }
+}
+
+neoForge {
+    version = project.neo_version
+    parchment { mappingsVersion = project.parchment_mappings_version; minecraftVersion = project.parchment_minecraft_version }
+    runs {
+        configureEach {
+            systemProperty 'forge.logging.markers', 'REGISTRIES'
+            logLevel = org.slf4j.event.Level.DEBUG
+            gameDirectory = file("runs/${name}")
+        }
+        client { client(); programArguments.addAll '--username', 'Uncraftbar' }
+        data { data(); programArguments.addAll '--mod', project.mod_id, '--all', '--output', file('src/generated/resources/').getAbsolutePath(), '--existing', file('src/main/resources/').getAbsolutePath() }
+    }
+    mods {
+        "${mod_id}" { sourceSet(sourceSets.main) }
+    }
+}
+
+sourceSets.main.resources { srcDir 'src/generated/resources' }
+
+
+configurations { runtimeClasspath.extendsFrom localRuntime }
+
+def addLocalArtifacts(type, dir, prefix = "extra-mods") {
+    for (extraModJar in fileTree(dir: dir, include: '*.jar')) {
+        def basename = extraModJar.name.substring(0, extraModJar.name.length() - ".jar".length())
+        def versionSep = basename.lastIndexOf('-')
+        assert versionSep != -1
+        def artifactId = basename.substring(0, versionSep)
+        def version = basename.substring(versionSep + 1)
+        dependencies.add(type, "${prefix}:$artifactId:$version")
+    }
+}
+
+dependencies {
+    implementation "net.neoforged:neoforge:${neo_version}"
+    compileOnly files('/tmp/justdirethings-src/build/libs/justdirethings-1.5.7.jar')
+    localRuntime files('/tmp/justdirethings-src/build/libs/justdirethings-1.5.7.jar')
+    compileOnly "mezz.jei:jei-${jei_mc_version}-common-api:${jei_version}"
+    compileOnly "mezz.jei:jei-${jei_mc_version}-neoforge-api:${jei_version}"
+    localRuntime "mezz.jei:jei-${jei_mc_version}-neoforge:${jei_version}"
+    compileOnly "vazkii.patchouli:Patchouli:${patchouli_version}:api"
+    localRuntime "vazkii.patchouli:Patchouli:${patchouli_version}"
+    addLocalArtifacts('localRuntime', extraModsDir)
+    addLocalArtifacts('compileOnly', extraAPIDir, "extra-api")
+}
+
+tasks.withType(ProcessResources).configureEach {
+    var replaceProperties = [
+        minecraft_version: minecraft_version, minecraft_version_range: minecraft_version_range,
+        neo_version: neo_version, neo_version_range: neo_version_range,
+        loader_version_range: loader_version_range,
+        mod_id: mod_id, mod_name: mod_name, mod_license: mod_license, mod_version: mod_version,
+        mod_authors: mod_authors, mod_description: mod_description, jdt_version: jdt_version,
+    ]
+    inputs.properties replaceProperties
+    filesMatching(['META-INF/neoforge.mods.toml']) { expand replaceProperties + [project: project] }
+}
+
+tasks.withType(JavaCompile).configureEach { options.encoding = 'UTF-8' }

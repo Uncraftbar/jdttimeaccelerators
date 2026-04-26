@@ -1,0 +1,20 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "group": "jdttimeaccelerators",
+  "pattern": [
+    "fdf",
+    "dod",
+    "frf"
+  ],
+  "key": {
+    "d": { "item": "minecraft:clock" },
+    "f": { "item": "justdirethings:celestigem" },
+    "o": { "item": "jdttimeaccelerators:timeacceleratort1" },
+    "r": { "item": "minecraft:redstone" }
+  },
+  "result": {
+    "count": 1,
+    "id": "jdttimeaccelerators:timeacceleratort2"
+  }
+}

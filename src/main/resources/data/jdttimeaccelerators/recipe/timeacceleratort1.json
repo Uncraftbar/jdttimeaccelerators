@@ -1,0 +1,21 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "group": "jdttimeaccelerators",
+  "pattern": [
+    "fdf",
+    "lol",
+    "frf"
+  ],
+  "key": {
+    "d": { "item": "minecraft:clock" },
+    "f": { "item": "justdirethings:ferricore_ingot" },
+    "l": { "item": "minecraft:lapis_lazuli" },
+    "o": { "item": "justdirethings:time_crystal" },
+    "r": { "item": "minecraft:redstone" }
+  },
+  "result": {
+    "count": 1,
+    "id": "jdttimeaccelerators:timeacceleratort1"
+  }
+}

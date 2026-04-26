@@ -1,0 +1,10 @@
+{
+  "variants": {
+    "facing=down": { "model": "jdttimeaccelerators:block/timeacceleratort2", "x": 180 },
+    "facing=east": { "model": "jdttimeaccelerators:block/timeacceleratort2", "x": 90, "y": 90 },
+    "facing=north": { "model": "jdttimeaccelerators:block/timeacceleratort2", "x": 90 },
+    "facing=south": { "model": "jdttimeaccelerators:block/timeacceleratort2", "x": 90, "y": 180 },
+    "facing=up": { "model": "jdttimeaccelerators:block/timeacceleratort2" },
+    "facing=west": { "model": "jdttimeaccelerators:block/timeacceleratort2", "x": 90, "y": 270 }
+  }
+}
