@@ -8,7 +8,7 @@ import net.neoforged.neoforge.network.registration.PayloadRegistrar;
 
 public class PacketHandler {
     public static void registerNetworking(final RegisterPayloadHandlersEvent event) {
-        final PayloadRegistrar registrar = event.registrar(JDTTimeAccelerators.MODID);
+        final PayloadRegistrar registrar = event.registrar(JDTTimeAccelerators.MODID).versioned("1");
         registrar.playToServer(TimeAcceleratorPayload.TYPE, TimeAcceleratorPayload.STREAM_CODEC, TimeAcceleratorPacket.get()::handle);
     }
 }

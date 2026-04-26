@@ -3,10 +3,9 @@ package com.uncraftbar.jdttimeaccelerators.common.blockentities;
 import com.direwolf20.justdirethings.common.blockentities.basebe.AreaAffectingBE;
 import com.direwolf20.justdirethings.setup.Config;
 import com.direwolf20.justdirethings.util.interfacehelpers.AreaAffectingData;
-import com.uncraftbar.jdttimeaccelerators.setup.Registration;
+
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.HolderLookup;
-import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.level.storage.ValueInput;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.phys.AABB;
@@ -18,10 +17,10 @@ import java.util.stream.Collectors;
 public class TimeAcceleratorT2BE extends TimeAcceleratorT1BE implements AreaAffectingBE {
     public AreaAffectingData areaAffectingData = new AreaAffectingData(getBlockState().getValue(BlockStateProperties.FACING));
 
-    public TimeAcceleratorT2BE(BlockPos pPos, BlockState pBlockState) { super(Registration.TimeAcceleratorT2BE.get(), pPos, pBlockState); }
+    public TimeAcceleratorT2BE(BlockPos pPos, BlockState pBlockState) { super(com.uncraftbar.jdttimeaccelerators.setup.Registration.TimeAcceleratorT2BE.get(), pPos, pBlockState); }
 
     @Override public void accelerateTargets() {
-        if (level == null || level.isClientSide || !isActiveRedstone()) return;
+        if (level == null || level.isClientSide() || !isActiveRedstone()) return;
         for (BlockPos targetPos : findTargets()) accelerateBlock(targetPos);
     }
 
@@ -39,14 +38,8 @@ public class TimeAcceleratorT2BE extends TimeAcceleratorT1BE implements AreaAffe
     @Override public int getMaxEnergy() { return 1000000; }
     @Override public AreaAffectingData getAreaAffectingData() { return areaAffectingData; }
 
-    @Override public void saveAdditional(CompoundTag tag, HolderLookup.Provider provider) {
-        super.saveAdditional(tag, provider);
-        saveAreaSettings(tag);
-    }
-
-    @Override public void loadAdditional(CompoundTag tag, HolderLookup.Provider provider) {
-        super.loadAdditional(tag, provider);
-        loadAreaSettings(tag);
+    @Override public void loadAdditional(ValueInput input) {
+        super.loadAdditional(input);
         areaAffectingData.area = null;
     }
 }

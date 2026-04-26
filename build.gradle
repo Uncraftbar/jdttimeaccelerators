@@ -3,7 +3,7 @@ plugins {
     id 'eclipse'
     id 'idea'
     id 'maven-publish'
-    id 'net.neoforged.moddev' version '2.0.137'
+    id 'net.neoforged.moddev' version '2.0.141'
 }
 
 version = mod_version
@@ -28,12 +28,14 @@ repositories {
 }
 
 java {
-    toolchain { languageVersion.set(JavaLanguageVersion.of(21)) }
+    toolchain { languageVersion.set(JavaLanguageVersion.of(25)) }
 }
 
 neoForge {
-    version = project.neo_version
-    parchment { mappingsVersion = project.parchment_mappings_version; minecraftVersion = project.parchment_minecraft_version }
+    enable {
+        version = project.neo_version
+        disableRecompilation = true
+    }
     runs {
         configureEach {
             systemProperty 'forge.logging.markers', 'REGISTRIES'
@@ -66,13 +68,11 @@ def addLocalArtifacts(type, dir, prefix = "extra-mods") {
 
 dependencies {
     implementation "net.neoforged:neoforge:${neo_version}"
-    compileOnly "curse.maven:just-dire-things-1002348:7463040"
-    localRuntime "curse.maven:just-dire-things-1002348:7463040"
+    compileOnly "curse.maven:just-dire-things-1002348:7983306"
+    localRuntime "curse.maven:just-dire-things-1002348:7983306"
     compileOnly "mezz.jei:jei-${jei_mc_version}-common-api:${jei_version}"
     compileOnly "mezz.jei:jei-${jei_mc_version}-neoforge-api:${jei_version}"
     localRuntime "mezz.jei:jei-${jei_mc_version}-neoforge:${jei_version}"
-    compileOnly "vazkii.patchouli:Patchouli:${patchouli_version}:api"
-    localRuntime "vazkii.patchouli:Patchouli:${patchouli_version}"
     addLocalArtifacts('localRuntime', extraModsDir)
     addLocalArtifacts('compileOnly', extraAPIDir, "extra-api")
 }

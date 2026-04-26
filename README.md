@@ -27,8 +27,8 @@ The goal is simple: keep the predictable feel and costs of the Just Dire Things 
 ## Requirements
 
 - Minecraft `1.21.1`
-- NeoForge `21.1.209` or newer in the `1.21.1` line
-- Just Dire Things `1.5.7` or newer
+- NeoForge `26.1.2.29-beta` or newer in the `26.1.2` line
+- Just Dire Things `1.6.6` or newer
 
 ## Recipes
 

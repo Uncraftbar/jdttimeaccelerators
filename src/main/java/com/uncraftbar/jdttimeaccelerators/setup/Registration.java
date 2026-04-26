@@ -29,8 +29,8 @@ public class Registration {
     public static final DeferredHolder<Block, TimeAcceleratorT2> TimeAcceleratorT2 = BLOCKS.register("timeacceleratort2", TimeAcceleratorT2::new);
     public static final DeferredHolder<Item, BlockItem> TimeAcceleratorT2_ITEM = ITEMS.register("timeacceleratort2", () -> new BlockItem(TimeAcceleratorT2.get(), new Item.Properties()));
 
-    public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<TimeAcceleratorT1BE>> TimeAcceleratorT1BE = BLOCK_ENTITIES.register("timeacceleratort1", () -> BlockEntityType.Builder.of(TimeAcceleratorT1BE::new, TimeAcceleratorT1.get()).build(null));
-    public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<TimeAcceleratorT2BE>> TimeAcceleratorT2BE = BLOCK_ENTITIES.register("timeacceleratort2", () -> BlockEntityType.Builder.of(TimeAcceleratorT2BE::new, TimeAcceleratorT2.get()).build(null));
+    public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<TimeAcceleratorT1BE>> TimeAcceleratorT1BE = BLOCK_ENTITIES.register("timeacceleratort1", () -> new BlockEntityType<>(TimeAcceleratorT1BE::new, TimeAcceleratorT1.get()));
+    public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<TimeAcceleratorT2BE>> TimeAcceleratorT2BE = BLOCK_ENTITIES.register("timeacceleratort2", () -> new BlockEntityType<>(TimeAcceleratorT2BE::new, TimeAcceleratorT2.get()));
 
     public static final DeferredHolder<MenuType<?>, MenuType<TimeAcceleratorT1Container>> TimeAcceleratorT1_Container = CONTAINERS.register("timeacceleratort1_container", () -> IMenuTypeExtension.create(TimeAcceleratorT1Container::new));
     public static final DeferredHolder<MenuType<?>, MenuType<TimeAcceleratorT2Container>> TimeAcceleratorT2_Container = CONTAINERS.register("timeacceleratort2_container", () -> IMenuTypeExtension.create(TimeAcceleratorT2Container::new));

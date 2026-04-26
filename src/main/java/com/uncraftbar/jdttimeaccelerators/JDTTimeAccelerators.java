@@ -21,17 +21,17 @@ public class JDTTimeAccelerators {
         ModSetup.CREATIVE_MODE_TABS.register(modEventBus);
         modEventBus.addListener(this::registerCapabilities);
         modEventBus.addListener(PacketHandler::registerNetworking);
-        if (FMLLoader.getDist().isClient()) {
+        if (FMLLoader.getCurrent().getDist().isClient()) {
             modEventBus.addListener(ClientSetup::registerScreens);
             modEventBus.addListener(ClientSetup::registerRenderers);
         }
     }
 
     private void registerCapabilities(RegisterCapabilitiesEvent event) {
-        event.registerBlock(Capabilities.EnergyStorage.BLOCK,
+        event.registerBlock(Capabilities.Energy.BLOCK,
                 (level, pos, state, be, side) -> be instanceof TimeAcceleratorT1BE accelerator ? accelerator.getEnergyStorage() : null,
                 Registration.TimeAcceleratorT1.get(), Registration.TimeAcceleratorT2.get());
-        event.registerBlock(Capabilities.FluidHandler.BLOCK,
+        event.registerBlock(Capabilities.Fluid.BLOCK,
                 (level, pos, state, be, side) -> be instanceof TimeAcceleratorT1BE accelerator ? accelerator.getFluidTank() : null,
                 Registration.TimeAcceleratorT1.get(), Registration.TimeAcceleratorT2.get());
     }
