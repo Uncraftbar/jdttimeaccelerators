@@ -66,8 +66,8 @@ def addLocalArtifacts(type, dir, prefix = "extra-mods") {
 
 dependencies {
     implementation "net.neoforged:neoforge:${neo_version}"
-    compileOnly files('/tmp/justdirethings-src/build/libs/justdirethings-1.5.7.jar')
-    localRuntime files('/tmp/justdirethings-src/build/libs/justdirethings-1.5.7.jar')
+    compileOnly "curse.maven:just-dire-things-1002348:7463040"
+    localRuntime "curse.maven:just-dire-things-1002348:7463040"
     compileOnly "mezz.jei:jei-${jei_mc_version}-common-api:${jei_version}"
     compileOnly "mezz.jei:jei-${jei_mc_version}-neoforge-api:${jei_version}"
     localRuntime "mezz.jei:jei-${jei_mc_version}-neoforge:${jei_version}"
