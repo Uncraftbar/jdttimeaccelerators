@@ -1,99 +1,174 @@
-name: Release
+name: Publish release
 
 on:
-  push:
-    tags: ['v*']
   workflow_dispatch:
     inputs:
-      tag:
-        description: Existing release tag (for example v1.1.0)
+      version:
+        description: Version shared by every release branch
         required: true
+        default: 1.2.0
         type: string
+      publish:
+        description: Upload to Modrinth, CurseForge, and GitHub Releases (disabled means dry run)
+        required: true
+        default: false
+        type: boolean
+      destination:
+        description: Destinations to validate or publish
+        required: true
+        default: all
+        type: choice
+        options:
+          - all
+          - modrinth
+          - curseforge
 
 permissions:
   contents: write
 
+concurrency:
+  group: jdt-time-accelerators-release
+  cancel-in-progress: false
+
 jobs:
-  build-release:
-    name: Build Minecraft ${{ matrix.minecraft }}
+  build:
+    name: Build ${{ matrix.branch }}
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
         include:
           - branch: '1.21.1'
-            minecraft: '1.21.1'
-            java: '21'
+            java: 21
+            archive: jdttimeaccelerators-neoforge-1.21.1
           - branch: '26.1.2'
-            minecraft: '26.1.2'
-            java: '25'
+            java: 25
+            archive: jdttimeaccelerators-neoforge-26.1.2
+
     steps:
       - name: Checkout ${{ matrix.branch }}
         uses: actions/checkout@v4
         with:
           ref: ${{ matrix.branch }}
+
       - name: Set up compile toolchain
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: ${{ matrix.java }}
+
       - name: Set up Java 21 for Gradle
         uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: '21'
-          cache: gradle
-      - name: Validate Gradle wrapper
-        uses: gradle/actions/wrapper-validation@v4
-      - name: Build
-        run: ./gradlew --no-daemon clean build
-      - name: Stage release jar
+          java-version: 21
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Verify branch version
         shell: bash
         run: |
-          set -euo pipefail
-          mkdir -p release
-          jar=$(find build/libs -maxdepth 1 -type f -name '*.jar' | head -1)
-          test -n "$jar"
-          cp "$jar" "release/$(basename "$jar")"
+          actual_version="$(sed -n 's/^mod_version=//p' gradle.properties)"
+          if [[ "$actual_version" != "${{ inputs.version }}" ]]; then
+            echo "${{ matrix.branch }} declares $actual_version, expected ${{ inputs.version }}" >&2
+            exit 1
+          fi
+
+      - name: Build jar
+        run: ./gradlew --no-daemon clean build
+
+      - name: Collect release jar
+        shell: bash
+        run: |
+          jar="build/libs/${{ matrix.archive }}-${{ inputs.version }}.jar"
+          test -f "$jar"
+          mkdir -p release-artifact
+          cp "$jar" release-artifact/
+
       - name: Upload release jar
         uses: actions/upload-artifact@v4
         with:
-          name: release-${{ matrix.minecraft }}
-          path: release/*.jar
+          name: release-${{ matrix.archive }}
+          path: release-artifact/*.jar
           if-no-files-found: error
 
-  release:
-    name: Publish GitHub release
-    needs: build-release
+  publish:
+    name: ${{ inputs.publish && 'Publish' || 'Dry run' }} ${{ inputs.version }}
+    needs: build
     runs-on: ubuntu-latest
+
     steps:
-      - name: Download both jars
+      - name: Checkout release configuration
+        uses: actions/checkout@v4
+        with:
+          ref: '1.21.1'
+
+      - name: Download all release jars
         uses: actions/download-artifact@v4
         with:
           pattern: release-*
-          path: release
+          path: release/artifacts
           merge-multiple: true
-      - name: Resolve release tag
-        id: tag
+
+      - name: Verify release set
+        shell: bash
+        run: |
+          find release/artifacts -maxdepth 1 -type f -name '*.jar' -print | sort
+          count="$(find release/artifacts -maxdepth 1 -type f -name '*.jar' | wc -l)"
+          test "$count" -eq 2
+
+      - name: Set up Java 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Run publisher
         shell: bash
         env:
-          EVENT_NAME: ${{ github.event_name }}
-          PUSH_TAG: ${{ github.ref_name }}
-          MANUAL_TAG: ${{ inputs.tag }}
+          MODRINTH_TOKEN: ${{ secrets.MODRINTH_TOKEN }}
+          CURSEFORGE_TOKEN: ${{ secrets.CURSEFORGE_TOKEN }}
         run: |
-          if [[ "$EVENT_NAME" == "workflow_dispatch" ]]; then
-            echo "value=$MANUAL_TAG" >> "$GITHUB_OUTPUT"
-          else
-            echo "value=$PUSH_TAG" >> "$GITHUB_OUTPUT"
+          dry_run=true
+          if [[ "${{ inputs.publish }}" == "true" ]]; then
+            dry_run=false
           fi
-      - name: Create GitHub release
+          publish_task=publishMods
+          if [[ "${{ inputs.destination }}" == "modrinth" ]]; then
+            publish_task=publishModrinthAll
+          elif [[ "${{ inputs.destination }}" == "curseforge" ]]; then
+            publish_task=publishCurseforgeAll
+          fi
+          ./release/gradlew -p release --no-daemon "$publish_task" \
+            -PreleaseVersion="${{ inputs.version }}" \
+            -PdryRun="$dry_run"
+
+      - name: Create or update GitHub Release
+        if: ${{ inputs.publish }}
+        shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
-          TAG: ${{ steps.tag.outputs.value }}
-        shell: bash
         run: |
-          gh release create "$TAG" release/*.jar \
-            --repo "$GITHUB_REPOSITORY" \
-            --verify-tag \
-            --title "JDT Time Accelerators ${TAG#v}" \
-            --generate-notes
+          tag="v${{ inputs.version }}"
+          title="JDT Time Accelerators ${{ inputs.version }}"
+          if gh release view "$tag" >/dev/null 2>&1; then
+            gh release edit "$tag" --title "$title" --notes-file release/CHANGELOG.md
+            gh release upload "$tag" release/artifacts/*.jar --clobber
+          else
+            gh release create "$tag" release/artifacts/*.jar \
+              --target "1.21.1" \
+              --title "$title" \
+              --notes-file release/CHANGELOG.md
+          fi
+
+      - name: Upload dry-run output
+        if: ${{ ! inputs.publish }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: publish-dry-run-${{ inputs.version }}
+          path: release/build
+          if-no-files-found: error

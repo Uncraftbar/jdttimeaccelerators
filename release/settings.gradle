@@ -1,0 +1,7 @@
+pluginManagement {
+    repositories {
+        gradlePluginPortal()
+    }
+}
+
+rootProject.name = "jdt-time-accelerators-release"
