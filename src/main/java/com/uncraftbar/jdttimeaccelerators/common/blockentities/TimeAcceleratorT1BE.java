@@ -28,12 +28,21 @@ public class TimeAcceleratorT1BE extends BaseMachineBE implements PoweredMachine
     public final FluidContainerData fluidContainerData = new FluidContainerData(this);
     protected final MachineEnergyStorage energyStorage = new MachineEnergyStorage(getMaxEnergy());
     protected final JustDireFluidTank fluidTank = new JustDireFluidTank(getMaxMB(), fluidStack -> fluidStack.is(JDTRegistration.TIME_FLUID_TYPE.get()));
+    /** The upstream Time Wand pays once for its default 30-second (600-tick) effect. */
+    private static final int TIME_WAND_DURATION_TICKS = 600;
     protected int speedLevel = 1;
+    // Start one unit short so a non-zero cost is charged immediately, while the
+    // total over every 600 successful target ticks still exactly matches the wand.
+    protected int fluidCostRemainder = TIME_WAND_DURATION_TICKS - 1;
 
     public TimeAcceleratorT1BE(BlockPos pPos, BlockState pBlockState) { this(com.uncraftbar.jdttimeaccelerators.setup.Registration.TimeAcceleratorT1BE.get(), pPos, pBlockState); }
     protected TimeAcceleratorT1BE(BlockEntityType<?> pType, BlockPos pPos, BlockState pBlockState) { super(pType, pPos, pBlockState); MACHINE_SLOTS = 0; }
 
-    @Override public void tickServer() { clearProtectionCache(); if (!level.isClientSide()) accelerateTargets(); }
+    @Override public void tickServer() {
+        // BaseMachineBE updates inherited machine state, including redstone input.
+        super.tickServer();
+        if (level != null && !level.isClientSide()) accelerateTargets();
+    }
 
     public void accelerateTargets() {
         if (level == null || level.isClientSide() || !isActiveRedstone()) return;
@@ -47,10 +56,11 @@ public class TimeAcceleratorT1BE extends BaseMachineBE implements PoweredMachine
         if (!MiscTools.isValidTickAccelBlock(serverLevel, targetState, targetBE)) return false;
         int rate = getAccelerationRate();
         int feCost = getEnergyCost(rate);
-        int fluidCost = getFluidCost(rate);
+        int fluidCost = getFluidCostForNextAcceleration(rate);
         if (!hasEnoughPower(feCost) || !hasEnoughFluid(fluidCost)) return false;
         extractEnergy(feCost, false);
         extractFluid(fluidCost);
+        advanceFluidCostRemainder(rate);
         MiscTools.doExtraTicks(serverLevel, targetPos, rate);
         return true;
     }
@@ -63,7 +73,25 @@ public class TimeAcceleratorT1BE extends BaseMachineBE implements PoweredMachine
     public int getSpeedLevel() { return speedLevel; }
     public void setSpeedLevel(int speedLevel) { this.speedLevel = Math.max(1, Math.min(speedLevel, getMaxSpeedLevel())); markDirtyClient(); }
     public int getEnergyCost(int rate) { return rate * TimeWand.getFEPerRate(); }
-    public int getFluidCost(int rate) { return (int)(rate * TimeWand.getMBPerRate()); }
+    /**
+     * Fluid consumed by stepping a wand target through 2x, 4x, ... up to rate.
+     * At the default 0.5 mB/rate, reaching 256x costs 255 mB in total.
+     */
+    public int getFluidCost(int rate) {
+        int totalCost = 0;
+        for (int wandRate = 2; wandRate <= rate; wandRate *= 2) {
+            totalCost += (int) (wandRate * TimeWand.getMBPerRate());
+            if (wandRate > Integer.MAX_VALUE / 2) break;
+        }
+        return totalCost;
+    }
+    /** Amortize the wand's one-time cost across 600 successful target ticks. */
+    public int getFluidCostForNextAcceleration(int rate) {
+        return (fluidCostRemainder + getFluidCost(rate)) / TIME_WAND_DURATION_TICKS;
+    }
+    protected void advanceFluidCostRemainder(int rate) {
+        fluidCostRemainder = (fluidCostRemainder + getFluidCost(rate)) % TIME_WAND_DURATION_TICKS;
+    }
     public boolean hasEnoughFluid(int fluidCost) {
         if (fluidCost <= 0) return true;
         try (Transaction tx = Transaction.openRoot()) {
@@ -83,11 +111,13 @@ public class TimeAcceleratorT1BE extends BaseMachineBE implements PoweredMachine
     @Override public void saveAdditional(ValueOutput output) {
         super.saveAdditional(output);
         output.putInt("timeAcceleratorSpeedLevel", speedLevel);
+        output.putInt("timeAcceleratorFluidCostRemainder", fluidCostRemainder);
         output.putChild("energyStorage", energyStorage);
         output.putChild("fluidTank", fluidTank);
     }
     @Override public void loadAdditional(ValueInput input) {
         speedLevel = Math.max(1, input.getIntOr("timeAcceleratorSpeedLevel", speedLevel));
+        fluidCostRemainder = Math.max(0, Math.min(input.getIntOr("timeAcceleratorFluidCostRemainder", fluidCostRemainder), TIME_WAND_DURATION_TICKS - 1));
         input.readChild("energyStorage", energyStorage);
         input.readChild("fluidTank", fluidTank);
         super.loadAdditional(input);

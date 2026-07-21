@@ -14,12 +14,8 @@ import net.minecraft.world.level.block.state.BlockState;
 import javax.annotation.Nullable;
 
 public class TimeAcceleratorT2 extends BaseMachineBlock {
-    public TimeAcceleratorT2() {
-        super(Properties.of()
-                .sound(SoundType.METAL)
-                .strength(2.0f)
-                .isRedstoneConductor(BaseMachineBlock::never)
-        );
+    public TimeAcceleratorT2(Properties properties) {
+        super(properties);
     }
 
     @Nullable

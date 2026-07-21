@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.1.0+26.1.2
+
+- Match the Time Wand's cumulative fluid cost, amortized across its 600-tick effect.
+- Scale fluid usage with each successfully accelerated target.
+- Restore inherited redstone signal evaluation.
+- Port the addon to Minecraft/NeoForge 26.1.2.
+
 ## 0.1.0
 
 Initial release.

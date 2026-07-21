@@ -43,7 +43,7 @@ neoForge {
             gameDirectory = file("runs/${name}")
         }
         client { client(); programArguments.addAll '--username', 'Uncraftbar' }
-        data { data(); programArguments.addAll '--mod', project.mod_id, '--all', '--output', file('src/generated/resources/').getAbsolutePath(), '--existing', file('src/main/resources/').getAbsolutePath() }
+        clientData { clientData(); programArguments.addAll '--mod', project.mod_id, '--all', '--output', file('src/generated/resources/').getAbsolutePath(), '--existing', file('src/main/resources/').getAbsolutePath() }
     }
     mods {
         "${mod_id}" { sourceSet(sourceSets.main) }
