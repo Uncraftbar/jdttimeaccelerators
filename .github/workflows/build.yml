@@ -38,7 +38,8 @@ jobs:
         run: |
           set -euo pipefail
           mod_version=$(sed -n 's/^mod_version=//p' gradle.properties)
-          echo "name=jdttimeaccelerators-${mod_version}" >> "$GITHUB_OUTPUT"
+          minecraft_version=$(sed -n 's/^minecraft_version=//p' gradle.properties)
+          echo "name=jdttimeaccelerators-neoforge-${minecraft_version}-${mod_version}" >> "$GITHUB_OUTPUT"
       - name: Upload built jar
         uses: actions/upload-artifact@v4
         with:
