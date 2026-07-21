@@ -21,12 +21,17 @@ import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.neoforged.neoforge.fluids.capability.IFluidHandler;
 
 public class TimeAcceleratorT1BE extends BaseMachineBE implements PoweredMachineBE, RedstoneControlledBE, FluidMachineBE {
+    /** The upstream Time Wand pays once for its default 30-second (600-tick) effect. */
+    private static final int TIME_WAND_DURATION_TICKS = 600;
     public RedstoneControlData redstoneControlData = getDefaultRedstoneData();
     public final PoweredMachineContainerData poweredMachineData = new PoweredMachineContainerData(this);
     public final FluidContainerData fluidContainerData = new FluidContainerData(this);
     protected final MachineEnergyStorage energyStorage = new MachineEnergyStorage(getMaxEnergy());
     protected final TimeAcceleratorFluidTank fluidTank = new TimeAcceleratorFluidTank(getMaxMB());
     protected int speedLevel = 1;
+    // Start one unit short so a non-zero cost is charged immediately, while the
+    // total over every 600 successful target ticks still exactly matches the wand.
+    protected int fluidCostRemainder = TIME_WAND_DURATION_TICKS - 1;
 
     public TimeAcceleratorT1BE(BlockPos pPos, BlockState pBlockState) { this(Registration.TimeAcceleratorT1BE.get(), pPos, pBlockState); }
     protected TimeAcceleratorT1BE(BlockEntityType<?> pType, BlockPos pPos, BlockState pBlockState) { super(pType, pPos, pBlockState); MACHINE_SLOTS = 0; }
@@ -45,10 +50,11 @@ public class TimeAcceleratorT1BE extends BaseMachineBE implements PoweredMachine
         if (!MiscTools.isValidTickAccelBlock(serverLevel, targetState, targetBE)) return false;
         int rate = getAccelerationRate();
         int feCost = getEnergyCost(rate);
-        int fluidCost = getFluidCost(rate);
+        int fluidCost = getFluidCostForNextAcceleration(rate);
         if (!hasEnoughPower(feCost) || !hasEnoughFluid(fluidCost)) return false;
         extractEnergy(feCost, false);
         extractFluid(fluidCost);
+        advanceFluidCostRemainder(rate);
         MiscTools.doExtraTicks(serverLevel, targetPos, rate);
         return true;
     }
@@ -61,18 +67,28 @@ public class TimeAcceleratorT1BE extends BaseMachineBE implements PoweredMachine
     public int getSpeedLevel() { return speedLevel; }
     public void setSpeedLevel(int speedLevel) { this.speedLevel = Math.max(1, Math.min(speedLevel, getMaxSpeedLevel())); markDirtyClient(); }
     public int getEnergyCost(int rate) { return rate * TimeWand.getFEPerRate(); }
+    /** Fluid the upstream wand consumes to accelerate one target for 600 ticks. */
     public int getFluidCost(int rate) { return (int)(rate * TimeWand.getMBPerRate()); }
+    /** Amortize that one-time wand cost across this machine's per-tick operation. */
+    public int getFluidCostForNextAcceleration(int rate) {
+        return (fluidCostRemainder + getFluidCost(rate)) / TIME_WAND_DURATION_TICKS;
+    }
+    protected void advanceFluidCostRemainder(int rate) {
+        fluidCostRemainder = (fluidCostRemainder + getFluidCost(rate)) % TIME_WAND_DURATION_TICKS;
+    }
     public boolean hasEnoughFluid(int fluidCost) { return fluidCost <= 0 || getFluidTank().drain(fluidCost, IFluidHandler.FluidAction.SIMULATE).getAmount() == fluidCost; }
     public int extractFluid(int fluidCost) { return fluidCost <= 0 ? 0 : getFluidTank().drain(fluidCost, IFluidHandler.FluidAction.EXECUTE).getAmount(); }
 
     @Override public void saveAdditional(CompoundTag tag, HolderLookup.Provider provider) {
         super.saveAdditional(tag, provider);
         tag.putInt("timeAcceleratorSpeedLevel", speedLevel);
+        tag.putInt("timeAcceleratorFluidCostRemainder", fluidCostRemainder);
         tag.put("energyStorage", energyStorage.serializeNBT(provider));
         tag.put("fluidTank", fluidTank.serializeNBT(provider));
     }
     @Override public void loadAdditional(CompoundTag tag, HolderLookup.Provider provider) {
         if (tag.contains("timeAcceleratorSpeedLevel")) speedLevel = Math.max(1, tag.getInt("timeAcceleratorSpeedLevel"));
+        if (tag.contains("timeAcceleratorFluidCostRemainder")) fluidCostRemainder = Math.max(0, Math.min(tag.getInt("timeAcceleratorFluidCostRemainder"), TIME_WAND_DURATION_TICKS - 1));
         if (tag.contains("energyStorage")) energyStorage.deserializeNBT(provider, tag.get("energyStorage"));
         if (tag.contains("fluidTank")) fluidTank.deserializeNBT(provider, tag.getCompound("fluidTank"));
         super.loadAdditional(tag, provider);
