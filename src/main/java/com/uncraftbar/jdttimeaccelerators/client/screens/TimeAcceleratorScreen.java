@@ -78,7 +78,7 @@ public class TimeAcceleratorScreen<T extends BaseMachineContainer> extends BaseM
         int labelY = baseMachineBE instanceof AreaAffectingBE ? topSectionTop - getGuiTop() + 44 : topSectionTop - getGuiTop() + 36;
         Component label = Component.literal("Wand Speed");
         Component multiplier = Component.literal(getDisplayedMultiplier() + "x");
-        guiGraphics.text(this.font, label, centerX - this.font.width(label) / 2, labelY, 4210752, false);
-        guiGraphics.text(this.font, multiplier, centerX - this.font.width(multiplier) / 2, labelY + 12, 4210752, false);
+        guiGraphics.text(this.font, label, centerX - this.font.width(label) / 2, labelY, 0xFF404040, false);
+        guiGraphics.text(this.font, multiplier, centerX - this.font.width(multiplier) / 2, labelY + 12, 0xFF404040, false);
     }
 }
