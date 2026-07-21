@@ -8,10 +8,10 @@
     "frf"
   ],
   "key": {
-    "d": { "item": "minecraft:clock" },
-    "f": { "item": "justdirethings:celestigem" },
-    "o": { "item": "jdttimeaccelerators:timeacceleratort1" },
-    "r": { "item": "minecraft:redstone" }
+    "d": "minecraft:clock",
+    "f": "justdirethings:celestigem",
+    "o": "jdttimeaccelerators:timeacceleratort1",
+    "r": "minecraft:redstone"
   },
   "result": {
     "count": 1,

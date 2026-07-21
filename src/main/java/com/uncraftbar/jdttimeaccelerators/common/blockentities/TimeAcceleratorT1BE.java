@@ -24,10 +24,12 @@ import net.neoforged.neoforge.transfer.transaction.Transaction;
 
 public class TimeAcceleratorT1BE extends BaseMachineBE implements PoweredMachineBE, RedstoneControlledBE, FluidMachineBE {
     public RedstoneControlData redstoneControlData = getDefaultRedstoneData();
-    public final PoweredMachineContainerData poweredMachineData = new PoweredMachineContainerData(this);
-    public final FluidContainerData fluidContainerData = new FluidContainerData(this);
+    // Backing stores must exist before container data is constructed. In JDT
+    // 1.6.11 FluidContainerData reads the tank in its constructor.
     protected final MachineEnergyStorage energyStorage = new MachineEnergyStorage(getMaxEnergy());
     protected final JustDireFluidTank fluidTank = new JustDireFluidTank(getMaxMB(), fluidStack -> fluidStack.is(JDTRegistration.TIME_FLUID_TYPE.get()));
+    public final PoweredMachineContainerData poweredMachineData = new PoweredMachineContainerData(this);
+    public final FluidContainerData fluidContainerData = new FluidContainerData(this);
     /** The upstream Time Wand pays once for its default 30-second (600-tick) effect. */
     private static final int TIME_WAND_DURATION_TICKS = 600;
     protected int speedLevel = 1;

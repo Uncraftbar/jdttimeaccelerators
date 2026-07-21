@@ -8,11 +8,11 @@
     "frf"
   ],
   "key": {
-    "d": { "item": "minecraft:clock" },
-    "f": { "item": "justdirethings:ferricore_ingot" },
-    "l": { "item": "minecraft:lapis_lazuli" },
-    "o": { "item": "justdirethings:time_crystal" },
-    "r": { "item": "minecraft:redstone" }
+    "d": "minecraft:clock",
+    "f": "justdirethings:ferricore_ingot",
+    "l": "minecraft:lapis_lazuli",
+    "o": "justdirethings:time_crystal",
+    "r": "minecraft:redstone"
   },
   "result": {
     "count": 1,
