@@ -1,0 +1,99 @@
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Existing release tag (for example v1.1.0)
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  build-release:
+    name: Build Minecraft ${{ matrix.minecraft }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - branch: '1.21.1'
+            minecraft: '1.21.1'
+            java: '21'
+          - branch: '26.1.2'
+            minecraft: '26.1.2'
+            java: '25'
+    steps:
+      - name: Checkout ${{ matrix.branch }}
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ matrix.branch }}
+      - name: Set up compile toolchain
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: ${{ matrix.java }}
+      - name: Set up Java 21 for Gradle
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: gradle
+      - name: Validate Gradle wrapper
+        uses: gradle/actions/wrapper-validation@v4
+      - name: Build
+        run: ./gradlew --no-daemon clean build
+      - name: Stage release jar
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p release
+          jar=$(find build/libs -maxdepth 1 -type f -name '*.jar' | head -1)
+          test -n "$jar"
+          cp "$jar" "release/$(basename "$jar")"
+      - name: Upload release jar
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-${{ matrix.minecraft }}
+          path: release/*.jar
+          if-no-files-found: error
+
+  release:
+    name: Publish GitHub release
+    needs: build-release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download both jars
+        uses: actions/download-artifact@v4
+        with:
+          pattern: release-*
+          path: release
+          merge-multiple: true
+      - name: Resolve release tag
+        id: tag
+        shell: bash
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          PUSH_TAG: ${{ github.ref_name }}
+          MANUAL_TAG: ${{ inputs.tag }}
+        run: |
+          if [[ "$EVENT_NAME" == "workflow_dispatch" ]]; then
+            echo "value=$MANUAL_TAG" >> "$GITHUB_OUTPUT"
+          else
+            echo "value=$PUSH_TAG" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Create GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ steps.tag.outputs.value }}
+        shell: bash
+        run: |
+          gh release create "$TAG" release/*.jar \
+            --repo "$GITHUB_REPOSITORY" \
+            --verify-tag \
+            --title "JDT Time Accelerators ${TAG#v}" \
+            --generate-notes
