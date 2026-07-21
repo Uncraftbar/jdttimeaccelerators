@@ -36,7 +36,12 @@ public class TimeAcceleratorT1BE extends BaseMachineBE implements PoweredMachine
     public TimeAcceleratorT1BE(BlockPos pPos, BlockState pBlockState) { this(Registration.TimeAcceleratorT1BE.get(), pPos, pBlockState); }
     protected TimeAcceleratorT1BE(BlockEntityType<?> pType, BlockPos pPos, BlockState pBlockState) { super(pType, pPos, pBlockState); MACHINE_SLOTS = 0; }
 
-    @Override public void tickServer() { clearProtectionCache(); if (!level.isClientSide) accelerateTargets(); }
+    @Override public void tickServer() {
+        // BaseMachineBE performs the redstone input evaluation. Skipping it left
+        // receivingRedstone stuck at its saved/default value forever.
+        super.tickServer();
+        if (level != null && !level.isClientSide) accelerateTargets();
+    }
 
     public void accelerateTargets() {
         if (level == null || level.isClientSide || !isActiveRedstone()) return;
@@ -67,8 +72,19 @@ public class TimeAcceleratorT1BE extends BaseMachineBE implements PoweredMachine
     public int getSpeedLevel() { return speedLevel; }
     public void setSpeedLevel(int speedLevel) { this.speedLevel = Math.max(1, Math.min(speedLevel, getMaxSpeedLevel())); markDirtyClient(); }
     public int getEnergyCost(int rate) { return rate * TimeWand.getFEPerRate(); }
-    /** Fluid the upstream wand consumes to accelerate one target for 600 ticks. */
-    public int getFluidCost(int rate) { return (int)(rate * TimeWand.getMBPerRate()); }
+    /**
+     * Fluid the upstream wand consumes while stepping one target up to this rate.
+     * Reaching 256x requires wand activations at 2x, 4x, ... 256x, so the cost is
+     * cumulative rather than only the final 256x activation (255 mB at defaults).
+     */
+    public int getFluidCost(int rate) {
+        int totalCost = 0;
+        for (int wandRate = 2; wandRate <= rate; wandRate *= 2) {
+            totalCost += (int) (wandRate * TimeWand.getMBPerRate());
+            if (wandRate > Integer.MAX_VALUE / 2) break;
+        }
+        return totalCost;
+    }
     /** Amortize that one-time wand cost across this machine's per-tick operation. */
     public int getFluidCostForNextAcceleration(int rate) {
         return (fluidCostRemainder + getFluidCost(rate)) / TIME_WAND_DURATION_TICKS;
