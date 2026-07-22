@@ -67,6 +67,8 @@ def addLocalArtifacts(type, dir, prefix = "extra-mods") {
 dependencies {
     implementation "net.neoforged:neoforge:${neo_version}"
     compileOnly "curse.maven:just-dire-things-1002348:7463040"
+    // Optional AE2 1.21.1 API/runtime jar; never required by our mod metadata.
+    compileOnly "curse.maven:applied-energistics-2-223794:7027323"
     localRuntime "curse.maven:just-dire-things-1002348:7463040"
     compileOnly "mezz.jei:jei-${jei_mc_version}-common-api:${jei_version}"
     compileOnly "mezz.jei:jei-${jei_mc_version}-neoforge-api:${jei_version}"

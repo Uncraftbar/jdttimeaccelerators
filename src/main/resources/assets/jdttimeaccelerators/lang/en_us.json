@@ -1,5 +1,21 @@
 {
   "block.jdttimeaccelerators.timeacceleratort1": "Simple Time Accelerator",
   "block.jdttimeaccelerators.timeacceleratort2": "Advanced Time Accelerator",
-  "itemGroup.jdttimeaccelerators": "JDT Time Accelerators"
+  "itemGroup.jdttimeaccelerators": "JDT Time Accelerators",
+  "item.jdttimeaccelerators.ae2_time_acceleration_card": "ME Time Acceleration Card",
+  "jdttimeaccelerators.ae2.pattern_providers": "ME Pattern Providers",
+  "jdttimeaccelerators.ae2.interfaces": "ME Interfaces",
+  "gui.jdttimeaccelerators.ae2.card_slot": "ME Time Acceleration Card",
+  "gui.jdttimeaccelerators.ae2.always": "Always",
+  "gui.jdttimeaccelerators.ae2.requested_only": "Requested",
+  "gui.jdttimeaccelerators.ae2.working_only": "Working",
+  "gui.jdttimeaccelerators.ae2.speed": "Acceleration Speed",
+  "gui.jdttimeaccelerators.ae2.mode": "Acceleration Mode",
+  "gui.jdttimeaccelerators.ae2.speed_hint": "Click to increase; Shift-click to decrease",
+  "gui.jdttimeaccelerators.ae2.mode_hint": "Click to toggle conditional acceleration",
+  "jdttimeaccelerators.ae2.extendedae_pattern_providers": "ExtendedAE Pattern Providers",
+  "jdttimeaccelerators.ae2.extendedae_interfaces": "ExtendedAE Interfaces",
+  "jdttimeaccelerators.ae2.megacells_pattern_providers": "MEGA Pattern Providers",
+  "jdttimeaccelerators.ae2.megacells_interfaces": "MEGA Interfaces",
+  "jdttimeaccelerators.ae2.advancedae_pattern_providers": "AdvancedAE Pattern Providers"
 }

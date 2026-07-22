@@ -79,3 +79,5 @@ For local development, the Gradle client run uses the username `Uncraftbar`.
 This project is licensed under the MIT License. See [`LICENSE`](LICENSE).
 
 Some block textures are derived from Just Dire Things textures, which are MIT licensed. See `src/main/resources/assets/jdttimeaccelerators/textures/block/JDT_TEXTURE_LICENSE_NOTICE.txt` for the upstream notice.
+
+The AE2 Time Acceleration Card texture is adapted from Applied Energistics 2 and is licensed separately under CC BY-NC-SA 3.0. See `src/main/resources/assets/jdttimeaccelerators/textures/item/AE2_TEXTURE_LICENSE_NOTICE.txt` for attribution and license details.

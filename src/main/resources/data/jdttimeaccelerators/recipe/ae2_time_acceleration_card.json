@@ -1,0 +1,13 @@
+{
+  "neoforge:conditions": [{ "type": "neoforge:mod_loaded", "modid": "ae2" }],
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": ["ETE", "PCP", "ETE"],
+  "key": {
+    "E": { "item": "ae2:fluix_crystal" },
+    "T": { "item": "justdirethings:time_crystal" },
+    "P": { "item": "ae2:engineering_processor" },
+    "C": { "item": "ae2:advanced_card" }
+  },
+  "result": { "id": "jdttimeaccelerators:ae2_time_acceleration_card", "count": 1 }
+}

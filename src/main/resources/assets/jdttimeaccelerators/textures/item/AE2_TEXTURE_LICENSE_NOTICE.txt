@@ -1,0 +1,26 @@
+AE2 Time Acceleration Card texture notice
+========================================
+
+The file "ae2_time_acceleration_card.png" is adapted from Applied Energistics 2's
+"advanced_card.png" texture.
+
+Original work:
+  Applied Energistics 2 — Advanced Card texture
+  https://github.com/AppliedEnergistics/Applied-Energistics-2/blob/main/src/main/resources/assets/ae2/textures/item/advanced_card.png
+
+Original texture/model attribution, as stated by Applied Energistics 2:
+  Copyright (c) 2020 Ridanisaurus Rid
+  Copyright (c) 2013-2020 AlgorithmX2 et al.
+
+Adaptation:
+  Modified for JDT Time Accelerators by Uncraftbar in 2026.
+
+This adapted texture is licensed under the Creative Commons
+Attribution-NonCommercial-ShareAlike 3.0 Unported license (CC BY-NC-SA 3.0):
+  https://creativecommons.org/licenses/by-nc-sa/3.0/
+
+This notice and license apply to the texture named above, not to the rest of
+JDT Time Accelerators, which remains licensed under the MIT License except
+where another asset-specific notice says otherwise.
+
+Applied Energistics 2 does not sponsor or endorse this mod.

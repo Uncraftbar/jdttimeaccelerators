@@ -19,6 +19,7 @@ public class ModSetup {
             .displayItems((parameters, output) -> {
                 output.accept(Registration.TimeAcceleratorT1_ITEM.get());
                 output.accept(Registration.TimeAcceleratorT2_ITEM.get());
+                output.accept(Registration.AE2_TIME_ACCELERATION_CARD.get());
             })
             .build());
 }

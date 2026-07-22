@@ -28,12 +28,28 @@ public class Registration {
     public static final DeferredHolder<Item, BlockItem> TimeAcceleratorT1_ITEM = ITEMS.register("timeacceleratort1", () -> new BlockItem(TimeAcceleratorT1.get(), new Item.Properties()));
     public static final DeferredHolder<Block, TimeAcceleratorT2> TimeAcceleratorT2 = BLOCKS.register("timeacceleratort2", TimeAcceleratorT2::new);
     public static final DeferredHolder<Item, BlockItem> TimeAcceleratorT2_ITEM = ITEMS.register("timeacceleratort2", () -> new BlockItem(TimeAcceleratorT2.get(), new Item.Properties()));
+    public static final DeferredHolder<Item, Item> AE2_TIME_ACCELERATION_CARD = ITEMS.register("ae2_time_acceleration_card", Registration::createAE2TimeAccelerationCard);
 
     public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<TimeAcceleratorT1BE>> TimeAcceleratorT1BE = BLOCK_ENTITIES.register("timeacceleratort1", () -> BlockEntityType.Builder.of(TimeAcceleratorT1BE::new, TimeAcceleratorT1.get()).build(null));
     public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<TimeAcceleratorT2BE>> TimeAcceleratorT2BE = BLOCK_ENTITIES.register("timeacceleratort2", () -> BlockEntityType.Builder.of(TimeAcceleratorT2BE::new, TimeAcceleratorT2.get()).build(null));
 
     public static final DeferredHolder<MenuType<?>, MenuType<TimeAcceleratorT1Container>> TimeAcceleratorT1_Container = CONTAINERS.register("timeacceleratort1_container", () -> IMenuTypeExtension.create(TimeAcceleratorT1Container::new));
     public static final DeferredHolder<MenuType<?>, MenuType<TimeAcceleratorT2Container>> TimeAcceleratorT2_Container = CONTAINERS.register("timeacceleratort2_container", () -> IMenuTypeExtension.create(TimeAcceleratorT2Container::new));
+
+
+    /**
+     * Creates AE2's own UpgradeCardItem when AE2 is present. Reflection is intentional:
+     * Registration is loaded in every installation, including installations without AE2.
+     */
+    private static Item createAE2TimeAccelerationCard() {
+        try {
+            Class<?> upgrades = Class.forName("appeng.api.upgrades.Upgrades");
+            return (Item) upgrades.getMethod("createUpgradeCardItem", Item.Properties.class)
+                    .invoke(null, new Item.Properties().stacksTo(64));
+        } catch (ReflectiveOperationException | LinkageError ignored) {
+            return new Item(new Item.Properties().stacksTo(64));
+        }
+    }
 
     public static void init(IEventBus eventBus) {
         BLOCKS.register(eventBus);

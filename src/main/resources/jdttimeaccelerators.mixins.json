@@ -1,0 +1,31 @@
+{
+  "required": false,
+  "minVersion": "0.8",
+  "package": "com.uncraftbar.jdttimeaccelerators.integration.ae2.mixin",
+  "plugin": "com.uncraftbar.jdttimeaccelerators.integration.ae2.AE2MixinPlugin",
+  "compatibilityLevel": "JAVA_21",
+  "mixins": [
+    "AEBaseMenuAccessor",
+    "InterfaceLogicMixin",
+    "InterfaceMenuMixin",
+    "InterfaceTickerMixin",
+    "PatternProviderLogicMixin",
+    "PatternProviderMenuMixin",
+    "PatternProviderQuickMoveMixin",
+    "PatternProviderTickerMixin",
+    "advancedae.AdvancedPatternProviderLogicMixin",
+    "advancedae.AdvancedPatternProviderMenuMixin",
+    "advancedae.SmallAdvancedPatternProviderMenuMixin",
+    "advancedae.AdvancedPatternProviderTickerMixin"
+  ],
+  "client": [
+    "client.AEBaseScreenAccessor",
+    "client.InterfaceScreenMixin",
+    "client.PatternProviderScreenMixin",
+    "advancedae.client.AdvancedPatternProviderScreenMixin",
+    "extendedae.client.ExtendedInterfaceScreenMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

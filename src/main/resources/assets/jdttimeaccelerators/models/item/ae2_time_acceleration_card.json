@@ -1,0 +1,4 @@
+{
+  "parent": "minecraft:item/generated",
+  "textures": { "layer0": "jdttimeaccelerators:item/ae2_time_acceleration_card" }
+}
