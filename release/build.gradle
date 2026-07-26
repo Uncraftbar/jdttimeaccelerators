@@ -25,6 +25,7 @@ publishMods {
     type = STABLE
     dryRun = dryRunEnabled
     maxRetries = 5
+    modLoaders.add("neoforge")
 
     activeReleases.each { release ->
         def artifactName = "jdttimeaccelerators-${release.loader}-${release.minecraft}-${releaseVersion.get()}.jar"
@@ -35,7 +36,6 @@ publishMods {
             projectId = "SaLsAr3W"
             file = artifactsDirectory.file(artifactName)
             displayName = releaseTitle
-            modLoaders.add(release.loader)
             minecraftVersions.add(release.minecraft)
             environment = CLIENT_AND_SERVER
         }
@@ -45,7 +45,6 @@ publishMods {
             projectId = "1525342"
             file = artifactsDirectory.file(artifactName)
             displayName = releaseTitle
-            modLoaders.add(release.loader)
             minecraftVersions.add(release.minecraft)
             client = true
             server = true

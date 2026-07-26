@@ -156,6 +156,48 @@ jobs:
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
 
+      - name: Remove malformed Modrinth release before retry
+        if: ${{ inputs.publish && (inputs.destination == 'all' || inputs.destination == 'modrinth') }}
+        shell: bash
+        env:
+          MODRINTH_TOKEN: ${{ secrets.MODRINTH_TOKEN }}
+        run: |
+          case "${{ inputs.minecraft }}" in
+            1.21.1) versions=("1.21.1") ;;
+            26.1.2) versions=("26.1.2") ;;
+            all) versions=("1.21.1" "26.1.2") ;;
+          esac
+
+          releases="$(curl --fail --silent --show-error \
+            "https://api.modrinth.com/v2/project/SaLsAr3W/version?include_changelog=false")"
+
+          for minecraft in "${versions[@]}"; do
+            title="JDT Time Accelerators ${{ inputs.version }} $minecraft NeoForge"
+            version_id="$(jq --raw-output --arg title "$title" \
+              '.[] | select(.name == $title) | .id' <<< "$releases")"
+
+            if [[ -z "$version_id" ]]; then
+              continue
+            fi
+
+            version="$(curl --fail --silent --show-error \
+              "https://api.modrinth.com/v2/version/$version_id")"
+            if jq --exit-status --arg minecraft "$minecraft" '
+              (.game_versions == [$minecraft])
+              and (.loaders == ["neoforge"])
+              and (.files | length == 1)
+              and (.files[0].filename | endswith(".jar"))
+            ' <<< "$version" >/dev/null; then
+              continue
+            fi
+
+            echo "Removing malformed Modrinth version $version_id before retrying."
+            curl --fail --silent --show-error \
+              --request DELETE \
+              --header "Authorization: $MODRINTH_TOKEN" \
+              "https://api.modrinth.com/v2/version/$version_id"
+          done
+
       - name: Run publisher
         shell: bash
         env:
@@ -176,6 +218,37 @@ jobs:
             -PreleaseVersion="${{ inputs.version }}" \
             -PreleaseTargets="${{ inputs.minecraft }}" \
             -PdryRun="$dry_run"
+
+      - name: Verify Modrinth release metadata
+        if: ${{ inputs.publish && (inputs.destination == 'all' || inputs.destination == 'modrinth') }}
+        shell: bash
+        run: |
+          case "${{ inputs.minecraft }}" in
+            1.21.1) versions=("1.21.1") ;;
+            26.1.2) versions=("26.1.2") ;;
+            all) versions=("1.21.1" "26.1.2") ;;
+          esac
+
+          releases="$(curl --fail --silent --show-error \
+            "https://api.modrinth.com/v2/project/SaLsAr3W/version?include_changelog=false")"
+
+          for minecraft in "${versions[@]}"; do
+            title="JDT Time Accelerators ${{ inputs.version }} $minecraft NeoForge"
+            version_id="$(jq --raw-output --arg title "$title" \
+              '.[] | select(.name == $title) | .id' <<< "$releases")"
+            test -n "$version_id"
+
+            version="$(curl --fail --silent --show-error \
+              "https://api.modrinth.com/v2/version/$version_id")"
+            jq --exit-status --arg minecraft "$minecraft" '
+              (.game_versions == [$minecraft])
+              and (.loaders == ["neoforge"])
+              and (.files | length == 1)
+              and (.files[0].filename | endswith(".jar"))
+            ' <<< "$version" >/dev/null
+
+            echo "Verified Modrinth version $version_id for Minecraft $minecraft / NeoForge."
+          done
 
       - name: Create or update GitHub Release
         if: ${{ inputs.publish }}
