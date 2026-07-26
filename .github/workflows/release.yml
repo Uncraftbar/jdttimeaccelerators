@@ -229,25 +229,36 @@ jobs:
             all) versions=("1.21.1" "26.1.2") ;;
           esac
 
-          releases="$(curl --fail --silent --show-error \
-            "https://api.modrinth.com/v2/project/SaLsAr3W/version?include_changelog=false")"
-
           for minecraft in "${versions[@]}"; do
             title="JDT Time Accelerators ${{ inputs.version }} $minecraft NeoForge"
-            version_id="$(jq --raw-output --arg title "$title" \
-              '.[] | select(.name == $title) | .id' <<< "$releases")"
-            test -n "$version_id"
+            verified=false
 
-            version="$(curl --fail --silent --show-error \
-              "https://api.modrinth.com/v2/version/$version_id")"
-            jq --exit-status --arg minecraft "$minecraft" '
-              (.game_versions == [$minecraft])
-              and (.loaders == ["neoforge"])
-              and (.files | length == 1)
-              and (.files[0].filename | endswith(".jar"))
-            ' <<< "$version" >/dev/null
+            for attempt in {1..6}; do
+              releases="$(curl --fail --silent --show-error \
+                "https://api.modrinth.com/v2/project/SaLsAr3W/version?include_changelog=false")"
+              version_id="$(jq --raw-output --arg title "$title" \
+                '.[] | select(.name == $title) | .id' <<< "$releases")"
 
-            echo "Verified Modrinth version $version_id for Minecraft $minecraft / NeoForge."
+              if [[ -n "$version_id" ]]; then
+                version="$(curl --fail --silent --show-error \
+                  "https://api.modrinth.com/v2/version/$version_id")"
+                if jq --exit-status --arg minecraft "$minecraft" '
+                  (.game_versions == [$minecraft])
+                  and (.loaders == ["neoforge"])
+                  and (.files | length == 1)
+                  and (.files[0].filename | endswith(".jar"))
+                ' <<< "$version" >/dev/null; then
+                  verified=true
+                  echo "Verified Modrinth version $version_id for Minecraft $minecraft / NeoForge."
+                  break
+                fi
+              fi
+
+              echo "Modrinth metadata is not consistent yet (attempt $attempt/6)."
+              sleep 5
+            done
+
+            test "$verified" = true
           done
 
       - name: Create or update GitHub Release
