@@ -25,6 +25,12 @@ The speed button chooses the multiplier. Every accelerated target is funded
 independently, so a provider surrounded by four machines can accelerate all four.
 If the network cannot pay a target's complete cost, that target is skipped.
 
+By default, a target can only be accelerated once per server tick across all
+Time Acceleration Cards and standalone Time Accelerators. Pointing several hosts
+at the same machine does not multiply its speed or consume resources repeatedly.
+Pack authors can opt into controlled stacking with `maxStacksPerTarget` in
+`serverconfig/jdttimeaccelerators-server.toml`.
+
 ## Choosing Target Sides
 
 Full-block Interfaces and Pattern Providers have a side-configuration button.
@@ -56,4 +62,3 @@ only target is the block directly in front of the installed part.
 There is no common AE2, Minecraft, or NeoForge API that reliably reports whether
 an arbitrary machine from another mod is actively working. Redstone control is
 therefore used instead of unreliable automatic work detection.
-

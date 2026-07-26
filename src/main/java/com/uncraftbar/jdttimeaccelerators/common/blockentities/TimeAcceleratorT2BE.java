@@ -1,8 +1,8 @@
 package com.uncraftbar.jdttimeaccelerators.common.blockentities;
 
 import com.direwolf20.justdirethings.common.blockentities.basebe.AreaAffectingBE;
-import com.direwolf20.justdirethings.setup.Config;
 import com.direwolf20.justdirethings.util.interfacehelpers.AreaAffectingData;
+import com.uncraftbar.jdttimeaccelerators.config.JDTTAConfig;
 import com.uncraftbar.jdttimeaccelerators.setup.Registration;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup;
@@ -34,7 +34,7 @@ public class TimeAcceleratorT2BE extends TimeAcceleratorT1BE implements AreaAffe
                 .collect(Collectors.toList());
     }
 
-    @Override public int getMaxAllowedMultiplier() { return Math.max(1, Config.TIME_WAND_MAX_MULTIPLIER.get()); }
+    @Override public int getMaxAllowedMultiplier() { return JDTTAConfig.maxAccelerationMultiplier(); }
     @Override public int getMaxMB() { return 16000; }
     @Override public int getMaxEnergy() { return 1000000; }
     @Override public AreaAffectingData getAreaAffectingData() { return areaAffectingData; }

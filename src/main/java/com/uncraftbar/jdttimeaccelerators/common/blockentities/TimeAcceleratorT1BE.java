@@ -7,7 +7,9 @@ import com.direwolf20.justdirethings.common.items.TimeWand;
 import com.direwolf20.justdirethings.setup.Config;
 import com.direwolf20.justdirethings.util.MiscTools;
 import com.direwolf20.justdirethings.util.interfacehelpers.RedstoneControlData;
+import com.uncraftbar.jdttimeaccelerators.common.acceleration.AccelerationCoordinator;
 import com.uncraftbar.jdttimeaccelerators.common.capabilities.TimeAcceleratorFluidTank;
+import com.uncraftbar.jdttimeaccelerators.config.JDTTAConfig;
 import com.uncraftbar.jdttimeaccelerators.setup.Registration;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup;
@@ -57,8 +59,29 @@ public class TimeAcceleratorT1BE extends BaseMachineBE implements PoweredMachine
         int feCost = getEnergyCost(rate);
         int fluidCost = getFluidCostForNextAcceleration(rate);
         if (!hasEnoughPower(feCost) || !hasEnoughFluid(fluidCost)) return false;
-        extractEnergy(feCost, false);
-        extractFluid(fluidCost);
+        if (!AccelerationCoordinator.tryClaim(serverLevel, targetPos)) return false;
+
+        int extractedEnergy = extractEnergy(feCost, false);
+        if (extractedEnergy != feCost) {
+            if (extractedEnergy > 0) getEnergyStorage().receiveEnergy(extractedEnergy, false);
+            AccelerationCoordinator.release(serverLevel, targetPos);
+            return false;
+        }
+
+        int extractedFluid = extractFluid(fluidCost);
+        if (extractedFluid != fluidCost) {
+            if (extractedFluid > 0) {
+                getFluidTank().fill(
+                        new net.neoforged.neoforge.fluids.FluidStack(
+                                com.direwolf20.justdirethings.setup.Registration.TIME_FLUID_SOURCE.get(),
+                                extractedFluid),
+                        IFluidHandler.FluidAction.EXECUTE);
+            }
+            getEnergyStorage().receiveEnergy(extractedEnergy, false);
+            AccelerationCoordinator.release(serverLevel, targetPos);
+            return false;
+        }
+
         advanceFluidCostRemainder(rate);
         MiscTools.doExtraTicks(serverLevel, targetPos, rate);
         return true;
@@ -66,8 +89,11 @@ public class TimeAcceleratorT1BE extends BaseMachineBE implements PoweredMachine
 
     public int getAccelerationRate() { return getAccelerationRateForSpeedLevel(speedLevel); }
     public int getAccelerationRateForSpeedLevel(int speedLevel) { return Math.min((int) TimeWandEntity.calculateAccelRate(speedLevel), getMaxAllowedMultiplier()); }
-    public int getMaxAllowedMultiplier() { return Math.max(1, highestPowerOfTwoAtMost(Config.TIME_WAND_MAX_MULTIPLIER.get() / 4)); }
-    protected int highestPowerOfTwoAtMost(int value) { int result = 1; while (result * 2 <= value) result *= 2; return result; }
+    public int getMaxAllowedMultiplier() {
+        int simpleMachineMaximum = JDTTAConfig.highestPowerOfTwoAtMost(
+                Math.max(1, Config.TIME_WAND_MAX_MULTIPLIER.get() / 4));
+        return Math.min(simpleMachineMaximum, JDTTAConfig.maxAccelerationMultiplier());
+    }
     public int getMaxSpeedLevel() { return Math.max(0, (int)(Math.log(getMaxAllowedMultiplier()) / Math.log(2))); }
     public int getSpeedLevel() { return speedLevel; }
     public void setSpeedLevel(int speedLevel) { this.speedLevel = Math.max(1, Math.min(speedLevel, getMaxSpeedLevel())); markDirtyClient(); }

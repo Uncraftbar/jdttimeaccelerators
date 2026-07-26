@@ -2,8 +2,9 @@ package com.uncraftbar.jdttimeaccelerators.integration.ae2;
 
 import com.direwolf20.justdirethings.common.entities.TimeWandEntity;
 import com.direwolf20.justdirethings.common.items.TimeWand;
-import com.direwolf20.justdirethings.setup.Config;
 import com.direwolf20.justdirethings.util.MiscTools;
+import com.uncraftbar.jdttimeaccelerators.common.acceleration.AccelerationCoordinator;
+import com.uncraftbar.jdttimeaccelerators.config.JDTTAConfig;
 import com.uncraftbar.jdttimeaccelerators.setup.Registration;
 
 import appeng.api.config.Actionable;
@@ -54,7 +55,7 @@ public final class AE2AccelerationEngine {
     public static int requestedStaleTimeout() { return REQUEST_STALE_TIMEOUT; }
 
     public static int maxSpeedLevel() {
-        int max = Math.max(2, Config.TIME_WAND_MAX_MULTIPLIER.get());
+        int max = Math.max(2, JDTTAConfig.maxAccelerationMultiplier());
         int level = 1;
         while (level < 30 && (1 << level) < max) level++;
         if ((1 << Math.min(level, 30)) > max) level--;
@@ -124,7 +125,13 @@ public final class AE2AccelerationEngine {
         }
 
         long before = machineFingerprint(target, level);
-        if (!accelerate(host, level, targetPos)) {
+        AccelerationResult result = accelerate(host, level, targetPos);
+        if (result == AccelerationResult.ALREADY_ACCELERATED) {
+            // Another Interface/Pattern Provider won this server tick. Keep the crafting
+            // request alive so this host can try again instead of forgetting an active job.
+            return;
+        }
+        if (result != AccelerationResult.ACCELERATED) {
             clearRequestedTarget(host);
             return;
         }
@@ -160,43 +167,57 @@ public final class AE2AccelerationEngine {
         }
     }
 
-    private static boolean accelerate(AE2AccelerationHost host, ServerLevel level, BlockPos targetPos) {
-        if (targetPos.equals(host.jdtta$getHostBlockEntity().getBlockPos())) return false;
+    private static AccelerationResult accelerate(AE2AccelerationHost host, ServerLevel level, BlockPos targetPos) {
+        if (targetPos.equals(host.jdtta$getHostBlockEntity().getBlockPos())) return AccelerationResult.FAILED;
         var state = level.getBlockState(targetPos);
         var target = level.getBlockEntity(targetPos);
-        if (!MiscTools.isValidTickAccelBlock(level, state, target)) return false;
+        if (!MiscTools.isValidTickAccelBlock(level, state, target)) return AccelerationResult.FAILED;
 
         int speedLevel = Math.max(1, Math.min(host.jdtta$getSpeedLevel(), maxSpeedLevel()));
-        int rate = Math.min((int) TimeWandEntity.calculateAccelRate(speedLevel), Config.TIME_WAND_MAX_MULTIPLIER.get());
+        int rate = Math.min((int) TimeWandEntity.calculateAccelRate(speedLevel),
+                JDTTAConfig.maxAccelerationMultiplier());
         int feCost = Math.multiplyExact(rate, TimeWand.getFEPerRate());
         int fullFluidCost = cumulativeFluidCost(rate);
         int fluidCost = (host.jdtta$getFluidRemainder() + fullFluidCost) / WAND_DURATION;
 
         var grid = host.jdtta$getMainNode().getGrid();
-        if (grid == null) return false;
+        if (grid == null) return AccelerationResult.FAILED;
         var fluidKey = AEFluidKey.of(com.direwolf20.justdirethings.setup.Registration.TIME_FLUID_SOURCE.get());
         var storage = grid.getStorageService().getInventory();
         var source = host.jdtta$getActionSource();
         double aeCost = PowerUnit.FE.convertTo(PowerUnit.AE, feCost);
 
-        if (fluidCost > 0 && storage.extract(fluidKey, fluidCost, Actionable.SIMULATE, source) != fluidCost) return false;
-        if (grid.getEnergyService().extractAEPower(aeCost, Actionable.SIMULATE, PowerMultiplier.ONE) + 1.0e-7 < aeCost) return false;
+        if (fluidCost > 0 && storage.extract(fluidKey, fluidCost, Actionable.SIMULATE, source) != fluidCost) {
+            return AccelerationResult.FAILED;
+        }
+        if (grid.getEnergyService().extractAEPower(aeCost, Actionable.SIMULATE, PowerMultiplier.ONE) + 1.0e-7 < aeCost) {
+            return AccelerationResult.FAILED;
+        }
+
+        // Claim only after resource simulation, but before charging the network. This makes
+        // competing hosts free to try if this one cannot pay while ensuring only the winner
+        // consumes resources and performs extra ticks.
+        if (!AccelerationCoordinator.tryClaim(level, targetPos)) {
+            return AccelerationResult.ALREADY_ACCELERATED;
+        }
 
         long extractedFluid = fluidCost <= 0 ? 0 : storage.extract(fluidKey, fluidCost, Actionable.MODULATE, source);
         if (extractedFluid != fluidCost) {
             if (extractedFluid > 0) storage.insert(fluidKey, extractedFluid, Actionable.MODULATE, source);
-            return false;
+            AccelerationCoordinator.release(level, targetPos);
+            return AccelerationResult.FAILED;
         }
         double extractedPower = grid.getEnergyService().extractAEPower(aeCost, Actionable.MODULATE, PowerMultiplier.ONE);
         if (extractedPower + 1.0e-7 < aeCost) {
             if (extractedFluid > 0) storage.insert(fluidKey, extractedFluid, Actionable.MODULATE, source);
             if (extractedPower > 0) grid.getEnergyService().injectPower(extractedPower, Actionable.MODULATE);
-            return false;
+            AccelerationCoordinator.release(level, targetPos);
+            return AccelerationResult.FAILED;
         }
 
         host.jdtta$setFluidRemainder((host.jdtta$getFluidRemainder() + fullFluidCost) % WAND_DURATION);
         MiscTools.doExtraTicks(level, targetPos, rate);
-        return true;
+        return AccelerationResult.ACCELERATED;
     }
 
     private static int cumulativeFluidCost(int rate) {
@@ -206,6 +227,12 @@ public final class AE2AccelerationEngine {
             if (wandRate > Integer.MAX_VALUE / 2) break;
         }
         return result;
+    }
+
+    private enum AccelerationResult {
+        ACCELERATED,
+        ALREADY_ACCELERATED,
+        FAILED
     }
 
 }

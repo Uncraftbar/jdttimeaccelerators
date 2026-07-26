@@ -34,6 +34,15 @@ The optional **Time Acceleration Card** turns supported ME Interfaces and Patter
 
 Compatibility is included for standard AE2 devices and provider/interface variants from ExpandedAE, ExtendedAE, MEGA Cells, and AdvancedAE.
 
+## Server configuration
+
+The world-specific `serverconfig/jdttimeaccelerators-server.toml` file provides two shared limits for standalone machines and AE2 cards:
+
+- `maxMultiplier = 0` follows the maximum configured for the Just Dire Things Time Wand. A positive value applies a lower cap, rounded down to a supported power-of-two multiplier.
+- `maxStacksPerTarget = 1` prevents several accelerators from stacking on the same block during one server tick. Pack authors can raise it to allow a controlled number of machines and cards to stack.
+
+Every successful stack pays its own full energy and Time Fluid cost. Failed and over-limit attempts consume nothing.
+
 ## Requirements
 
 - Minecraft `1.21.1`

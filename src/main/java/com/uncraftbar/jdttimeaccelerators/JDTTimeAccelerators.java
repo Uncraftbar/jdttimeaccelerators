@@ -2,11 +2,13 @@ package com.uncraftbar.jdttimeaccelerators;
 
 import com.uncraftbar.jdttimeaccelerators.common.blockentities.TimeAcceleratorT1BE;
 import com.uncraftbar.jdttimeaccelerators.common.network.PacketHandler;
+import com.uncraftbar.jdttimeaccelerators.config.JDTTAConfig;
 import com.uncraftbar.jdttimeaccelerators.setup.ClientSetup;
 import com.uncraftbar.jdttimeaccelerators.setup.ModSetup;
 import com.uncraftbar.jdttimeaccelerators.setup.Registration;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.ModContainer;
+import net.neoforged.fml.config.ModConfig;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.fml.loading.FMLLoader;
 import net.neoforged.neoforge.capabilities.Capabilities;
@@ -17,6 +19,7 @@ public class JDTTimeAccelerators {
     public static final String MODID = "jdttimeaccelerators";
 
     public JDTTimeAccelerators(IEventBus modEventBus, ModContainer container) {
+        container.registerConfig(ModConfig.Type.SERVER, JDTTAConfig.SERVER_SPEC);
         Registration.init(modEventBus);
         ModSetup.CREATIVE_MODE_TABS.register(modEventBus);
         modEventBus.addListener(this::registerCapabilities);

@@ -1,5 +1,16 @@
 # Changelog
 
+## Unreleased
+
+### Added
+
+- Added server configuration for a global acceleration multiplier cap and the number of allowed stacks per target.
+
+### Fixed
+
+- Prevented standalone machines and AE2 card hosts from bypassing the stack limit when they target the same block in one server tick.
+- Prevented rejected or failed acceleration attempts from consuming energy or Time Fluid.
+
 ## 2.0.0
 
 ### Added
