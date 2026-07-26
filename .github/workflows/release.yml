@@ -233,7 +233,7 @@ jobs:
             title="JDT Time Accelerators ${{ inputs.version }} $minecraft NeoForge"
             verified=false
 
-            for attempt in {1..6}; do
+            for attempt in {1..24}; do
               releases="$(curl --fail --silent --show-error \
                 "https://api.modrinth.com/v2/project/SaLsAr3W/version?include_changelog=false")"
               version_id="$(jq --raw-output --arg title "$title" \
@@ -254,7 +254,7 @@ jobs:
                 fi
               fi
 
-              echo "Modrinth metadata is not consistent yet (attempt $attempt/6)."
+              echo "Modrinth metadata is not consistent yet (attempt $attempt/24)."
               sleep 5
             done
 
