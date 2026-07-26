@@ -1,15 +1,17 @@
 # Changelog
 
-## Unreleased
+## 2.1.0
 
 ### Added
 
 - Added server configuration for a global acceleration multiplier cap and the number of allowed stacks per target.
+- Added an in-game NeoForge configuration screen with translated setting names.
 
 ### Fixed
 
 - Prevented standalone machines and AE2 card hosts from bypassing the stack limit when they target the same block in one server tick.
 - Prevented rejected or failed acceleration attempts from consuming energy or Time Fluid.
+- Fixed the documented server config location.
 
 ## 2.0.0
 
