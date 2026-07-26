@@ -3,10 +3,17 @@ package com.uncraftbar.jdttimeaccelerators.setup;
 import com.uncraftbar.jdttimeaccelerators.client.blockentityrenders.TimeAcceleratorT2BER;
 import com.uncraftbar.jdttimeaccelerators.client.screens.TimeAcceleratorT1Screen;
 import com.uncraftbar.jdttimeaccelerators.client.screens.TimeAcceleratorT2Screen;
+import net.neoforged.fml.ModContainer;
+import net.neoforged.neoforge.client.gui.ConfigurationScreen;
+import net.neoforged.neoforge.client.gui.IConfigScreenFactory;
 import net.neoforged.neoforge.client.event.EntityRenderersEvent;
 import net.neoforged.neoforge.client.event.RegisterMenuScreensEvent;
 
 public class ClientSetup {
+    public static void registerConfigScreen(ModContainer container) {
+        container.registerExtensionPoint(IConfigScreenFactory.class, ConfigurationScreen::new);
+    }
+
     public static void registerScreens(RegisterMenuScreensEvent event) {
         event.register(Registration.TimeAcceleratorT1_Container.get(), TimeAcceleratorT1Screen::new);
         event.register(Registration.TimeAcceleratorT2_Container.get(), TimeAcceleratorT2Screen::new);

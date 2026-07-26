@@ -29,7 +29,7 @@ By default, a target can only be accelerated once per server tick across all
 Time Acceleration Cards and standalone Time Accelerators. Pointing several hosts
 at the same machine does not multiply its speed or consume resources repeatedly.
 Pack authors can opt into controlled stacking with `maxStacksPerTarget` in
-`serverconfig/jdttimeaccelerators-server.toml`.
+`config/jdttimeaccelerators-server.toml`.
 
 ## Choosing Target Sides
 

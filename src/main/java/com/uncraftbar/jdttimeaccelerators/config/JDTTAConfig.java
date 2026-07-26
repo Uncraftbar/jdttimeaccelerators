@@ -12,7 +12,10 @@ public final class JDTTAConfig {
 
     static {
         ModConfigSpec.Builder builder = new ModConfigSpec.Builder();
-        builder.push("acceleration");
+        builder
+                .comment("Limits shared by standalone Time Accelerators and AE2 card hosts.")
+                .translation("config.jdttimeaccelerators.acceleration")
+                .push("acceleration");
 
         MAX_ACCELERATION_MULTIPLIER = builder
                 .comment(
@@ -20,12 +23,14 @@ public final class JDTTAConfig {
                         "0 follows Just Dire Things' Time Wand maximum.",
                         "Other values are capped by the Time Wand maximum and rounded down",
                         "to the nearest power of two.")
+                .translation("config.jdttimeaccelerators.max_multiplier")
                 .defineInRange("maxMultiplier", 0, 0, 1 << 30);
 
         MAX_STACKS_PER_TARGET = builder
                 .comment(
                         "How many JDT Time Accelerator machines and AE2 cards may accelerate",
                         "the same target during one server tick. 1 disables stacked acceleration.")
+                .translation("config.jdttimeaccelerators.max_stacks_per_target")
                 .defineInRange("maxStacksPerTarget", 1, 1, 64);
 
         builder.pop();

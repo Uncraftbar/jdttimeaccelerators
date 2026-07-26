@@ -1,4 +1,7 @@
 {
+  "config.jdttimeaccelerators.acceleration": "Acceleration",
+  "config.jdttimeaccelerators.max_multiplier": "Maximum Multiplier",
+  "config.jdttimeaccelerators.max_stacks_per_target": "Maximum Stacks per Target",
   "block.jdttimeaccelerators.timeacceleratort1": "Simple Time Accelerator",
   "block.jdttimeaccelerators.timeacceleratort2": "Advanced Time Accelerator",
   "itemGroup.jdttimeaccelerators": "JDT Time Accelerators",

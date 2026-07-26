@@ -26,6 +26,7 @@ public class JDTTimeAccelerators {
         modEventBus.addListener(PacketHandler::registerNetworking);
         modEventBus.addListener(com.uncraftbar.jdttimeaccelerators.integration.ae2.AE2IntegrationBootstrap::onCommonSetup);
         if (FMLLoader.getDist().isClient()) {
+            ClientSetup.registerConfigScreen(container);
             modEventBus.addListener(ClientSetup::registerScreens);
             modEventBus.addListener(ClientSetup::registerRenderers);
         }

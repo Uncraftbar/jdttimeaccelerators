@@ -36,7 +36,7 @@ Compatibility is included for standard AE2 devices and provider/interface varian
 
 ## Server configuration
 
-The world-specific `serverconfig/jdttimeaccelerators-server.toml` file provides two shared limits for standalone machines and AE2 cards:
+The `config/jdttimeaccelerators-server.toml` file provides two shared limits for standalone machines and AE2 cards. It can also be edited from NeoForge's **Mods → JDT Time Accelerators → Config** screen while playing in a local world:
 
 - `maxMultiplier = 0` follows the maximum configured for the Just Dire Things Time Wand. A positive value applies a lower cap, rounded down to a supported power-of-two multiplier.
 - `maxStacksPerTarget = 1` prevents several accelerators from stacking on the same block during one server tick. Pack authors can raise it to allow a controlled number of machines and cards to stack.
