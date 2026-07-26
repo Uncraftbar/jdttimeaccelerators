@@ -1,11 +1,5 @@
 package com.uncraftbar.jdttimeaccelerators.integration.ae2;
 
-import java.lang.reflect.Method;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-
-import org.jetbrains.annotations.Nullable;
-
 import com.direwolf20.justdirethings.common.entities.TimeWandEntity;
 import com.direwolf20.justdirethings.common.items.TimeWand;
 import com.direwolf20.justdirethings.setup.Config;
@@ -15,7 +9,6 @@ import com.uncraftbar.jdttimeaccelerators.setup.Registration;
 import appeng.api.config.Actionable;
 import appeng.api.config.PowerMultiplier;
 import appeng.api.config.PowerUnit;
-import appeng.api.implementations.blockentities.ICraftingMachine;
 import appeng.api.stacks.AEFluidKey;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -29,8 +22,6 @@ public final class AE2AccelerationEngine {
     private static final int REQUEST_STALE_TIMEOUT = 600;
     /** Brief tolerance for machines whose persisted state changes only every few ticks. */
     private static final int REQUEST_IDLE_GRACE_TICKS = 3;
-    private static final Map<Class<?>, @Nullable Method> WORK_METHODS = new ConcurrentHashMap<>();
-
     private AE2AccelerationEngine() {}
 
     public static boolean isCardInstalled(AE2AccelerationHost host) {
@@ -70,6 +61,18 @@ public final class AE2AccelerationEngine {
         return Math.max(1, level);
     }
 
+    public static boolean shouldTickUrgently(AE2AccelerationHost host) {
+        if (!isCardInstalled(host)) return false;
+        if (host.jdtta$isPatternProvider() && host.jdtta$isConditional()) {
+            return host.jdtta$getRequestedTarget() != null;
+        }
+        if (!host.jdtta$isPatternProvider() && host.jdtta$isConditional()) {
+            BlockEntity be = host.jdtta$getHostBlockEntity();
+            return be.getLevel() != null && be.getLevel().hasNeighborSignal(be.getBlockPos());
+        }
+        return true;
+    }
+
     public static void tick(AE2AccelerationHost host) {
         if (!isCardInstalled(host)) return;
         var node = host.jdtta$getMainNode();
@@ -86,14 +89,30 @@ public final class AE2AccelerationEngine {
                 clearRequestedTarget(host);
                 return;
             }
+            BlockPos hostPos = be.getBlockPos();
+            Direction requestedSide = Direction.fromDelta(
+                    requested.getX() - hostPos.getX(),
+                    requested.getY() - hostPos.getY(),
+                    requested.getZ() - hostPos.getZ());
+            if (requestedSide == null
+                    || !host.jdtta$getSelectedTargetDirections().contains(requestedSide)) {
+                clearRequestedTarget(host);
+                return;
+            }
             accelerateRequested(host, level, requested);
             return;
         }
 
-        for (Direction direction : host.jdtta$getTargetDirections()) {
+        // Interfaces use deterministic redstone control instead of attempting to
+        // infer a third-party machine's internal working state.
+        if (host.jdtta$isConditional() && !level.hasNeighborSignal(be.getBlockPos())) return;
+
+        // Every selected eligible target gets its own funded operation. This lets
+        // one provider accelerate parallel machines while preserving exact costs:
+        // if resources run out, only the targets already paid for are accelerated.
+        for (Direction direction : host.jdtta$getSelectedTargetDirections()) {
             BlockPos target = be.getBlockPos().relative(direction);
-            if (host.jdtta$isConditional() && !isMachineWorking(level, target)) continue;
-            if (accelerate(host, level, target)) return; // one adjacent target per card/tick
+            accelerate(host, level, target);
         }
     }
 
@@ -105,21 +124,17 @@ public final class AE2AccelerationEngine {
         }
 
         long before = machineFingerprint(target, level);
-        Boolean workingBefore = getMachineWorkingState(target);
         if (!accelerate(host, level, targetPos)) {
             clearRequestedTarget(host);
             return;
         }
         long after = machineFingerprint(target, level);
-        Boolean workingAfter = getMachineWorkingState(target);
 
-        boolean observedWork = Boolean.TRUE.equals(workingBefore)
-                || Boolean.TRUE.equals(workingAfter)
-                || before != after;
+        boolean observedWork = before != after;
         int idleTicks = observedWork ? 0 : host.jdtta$getRequestedTargetIdleTicks() + 1;
         host.jdtta$setRequestedTargetIdleTicks(idleTicks);
 
-        if (Boolean.FALSE.equals(workingAfter) || idleTicks >= REQUEST_IDLE_GRACE_TICKS) {
+        if (idleTicks >= REQUEST_IDLE_GRACE_TICKS) {
             clearRequestedTarget(host);
         } else if (observedWork) {
             // Keep long-running crafts alive without imposing a fixed acceleration duration.
@@ -193,31 +208,4 @@ public final class AE2AccelerationEngine {
         return result;
     }
 
-    private static boolean isMachineWorking(ServerLevel level, BlockPos pos) {
-        BlockEntity be = level.getBlockEntity(pos);
-        return be != null && Boolean.TRUE.equals(getMachineWorkingState(be));
-    }
-
-    @Nullable
-    private static Boolean getMachineWorkingState(BlockEntity be) {
-        for (Direction side : Direction.values()) {
-            var crafting = ICraftingMachine.of(be, side);
-            if (crafting != null && !crafting.acceptsPlans()) return true;
-        }
-        Method method = WORK_METHODS.computeIfAbsent(be.getClass(), AE2AccelerationEngine::findWorkMethod);
-        if (method == null) return null;
-        try { return Boolean.TRUE.equals(method.invoke(be)); }
-        catch (ReflectiveOperationException ignored) { return null; }
-    }
-
-    @Nullable
-    private static Method findWorkMethod(Class<?> type) {
-        for (String name : new String[]{"isWorking", "isRunning", "isProcessing"}) {
-            try {
-                Method method = type.getMethod(name);
-                if (method.getReturnType() == boolean.class || method.getReturnType() == Boolean.class) return method;
-            } catch (NoSuchMethodException ignored) {}
-        }
-        return null;
-    }
 }

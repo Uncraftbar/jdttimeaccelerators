@@ -18,8 +18,16 @@ public abstract class AdvancedPatternProviderMenuMixin implements AE2Acceleratio
     @GuiSync(40) public int jdtta$speedLevel = 1;
     @GuiSync(41) public boolean jdtta$conditional;
     @GuiSync(42) public boolean jdtta$cardInstalled;
+    @GuiSync(43) public int jdtta$targetMask;
+    @GuiSync(44) public boolean jdtta$targetConfigurable;
 
-    @Inject(method = "<init>", at = @At("TAIL"))
+    /*
+     * Target only AdvancedAE's protected implementation constructor. Its public
+     * constructor delegates to this one, and a wildcard constructor injection ran
+     * twice for the full-size menu. The small menu also delegates here, so it does
+     * not need a second concrete-menu injection.
+     */
+    @Inject(method = "<init>(Lnet/minecraft/world/inventory/MenuType;ILnet/minecraft/world/entity/player/Inventory;Lnet/pedroksl/advanced_ae/common/logic/AdvPatternProviderLogicHost;)V", at = @At("TAIL"))
     private void jdtta$initialize(CallbackInfo ci) {
         try {
             Class<?> type = this.getClass();
@@ -46,6 +54,8 @@ public abstract class AdvancedPatternProviderMenuMixin implements AE2Acceleratio
         jdtta$speedLevel = jdtta$host.jdtta$getSpeedLevel();
         jdtta$conditional = jdtta$host.jdtta$isConditional();
         jdtta$cardInstalled = AE2AccelerationEngine.isCardInstalled(jdtta$host);
+        jdtta$targetMask = jdtta$host.jdtta$getTargetMask();
+        jdtta$targetConfigurable = jdtta$host.jdtta$isTargetSelectionConfigurable();
             // AppliedFlux owns its original slot and only wakes its own energy ticker.
             // Alert AE2's provider/interface ticker as well so a card inserted there
             // starts acceleration immediately, just like one inserted in our slot.
@@ -55,6 +65,8 @@ public abstract class AdvancedPatternProviderMenuMixin implements AE2Acceleratio
     @Override public int jdtta$getSyncedSpeedLevel() { return jdtta$speedLevel; }
     @Override public boolean jdtta$getSyncedConditional() { return jdtta$conditional; }
     @Override public boolean jdtta$getSyncedCardInstalled() { return jdtta$cardInstalled; }
+    @Override public int jdtta$getSyncedTargetMask() { return jdtta$targetMask; }
+    @Override public boolean jdtta$getSyncedTargetConfigurable() { return jdtta$targetConfigurable; }
     @Override public void jdtta$cycleSpeed(boolean backwards) {
         if (jdtta$host == null) return;
         int max = AE2AccelerationEngine.maxSpeedLevel();
@@ -65,5 +77,12 @@ public abstract class AdvancedPatternProviderMenuMixin implements AE2Acceleratio
     }
     @Override public void jdtta$toggleConditional() {
         if (jdtta$host != null) jdtta$host.jdtta$setConditional(!jdtta$host.jdtta$isConditional());
+    }
+    @Override public void jdtta$setTargetMask(int mask) {
+        if (jdtta$host == null || !jdtta$host.jdtta$isTargetSelectionConfigurable()) return;
+        jdtta$host.jdtta$setTargetMask(mask);
+    }
+    @Override public net.minecraft.world.level.block.entity.BlockEntity jdtta$getHostBlockEntity() {
+        return jdtta$host.jdtta$getHostBlockEntity();
     }
 }

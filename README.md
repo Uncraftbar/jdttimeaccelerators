@@ -1,68 +1,65 @@
 # JDT Time Accelerators
 
-JDT Time Accelerators is a NeoForge addon for [Just Dire Things](https://www.curseforge.com/minecraft/mc-mods/just-dire-things) that turns Time Wand-style acceleration into placeable, powered machines.
+JDT Time Accelerators is a NeoForge addon focused on automating the Time Wand from [Just Dire Things](https://www.curseforge.com/minecraft/mc-mods/just-dire-things). Use standalone powered machines for single-block or area acceleration, or install the Time Acceleration Card in Applied Energistics 2 Interfaces and Pattern Providers to power acceleration directly from your ME network.
 
-The goal is simple: keep the predictable feel and costs of the Just Dire Things Time Wand, but make it usable in automation setups without requiring a player to stand there and click. Like civilization, but with fewer meetings.
+The goal is to preserve the Time Wand's familiar multipliers, costs, and configuration while making time acceleration practical in unattended automation.
 
 ## Features
 
-- **Simple Time Accelerator**
-  - Accelerates the single block directly in front of the machine.
-  - Uses Forge Energy.
-  - Uses Time Fluid when Just Dire Things configures a Time Wand fluid cost.
-  - Speed is controlled from the machine GUI.
-  - Maximum speed is capped to one quarter of the configured Just Dire Things Time Wand maximum multiplier.
+### Simple Time Accelerator
 
-- **Advanced Time Accelerator**
-  - Accelerates blocks in a configurable area using the familiar Just Dire Things area controls.
-  - Uses Forge Energy.
-  - Uses Time Fluid when applicable.
-  - Speed is controlled from the machine GUI.
-  - Can use the full configured Just Dire Things Time Wand maximum multiplier.
+- Accelerates the single block directly in front of the machine.
+- Uses Forge Energy and, when configured by Just Dire Things, Time Fluid.
+- Supports redstone control.
+- Offers Time Wand-style speed selection up to one quarter of the configured maximum multiplier.
 
-- Both machines support the inherited Just Dire Things redstone behavior.
-- Both machines are registered in their own creative tab.
-- No Time Wand item is stored inside the machines.
+### Advanced Time Accelerator
+
+- Accelerates blocks in a configurable area using the familiar Just Dire Things area controls.
+- Uses Forge Energy and Time Fluid.
+- Supports redstone control.
+- Can use the full configured Time Wand multiplier range.
+
+### Applied Energistics 2 integration
+
+The optional **Time Acceleration Card** turns supported ME Interfaces and Pattern Providers into network-powered time accelerators.
+
+- Draws AE power and Time Fluid from the connected ME network.
+- Supports independent selection of all six adjacent sides on full-block hosts.
+- Keeps cable-part hosts fixed to the block directly in front of the part.
+- Charges every eligible selected target independently.
+- Gives Pattern Providers **Always** and **Crafting Only** modes.
+- Gives Interfaces **Always** and **Redstone Signal** modes.
+- Includes an AE2 Guide page with setup and safety information.
+
+Compatibility is included for standard AE2 devices and provider/interface variants from ExpandedAE, ExtendedAE, MEGA Cells, and AdvancedAE.
 
 ## Requirements
 
 - Minecraft `1.21.1`
 - NeoForge `21.1.209` or newer in the `1.21.1` line
 - Just Dire Things `1.5.7` or newer
+- Applied Energistics 2 `19.2.0` or newer is optional and only required for the Time Acceleration Card
 
-## Recipes
+## Recipes and usage
 
-### Simple Time Accelerator
+Recipes are available through JEI and other recipe viewers.
 
-Crafted from:
+For the standalone machines:
 
-- Just Dire Things Ferricore Ingots
-- 1 Clock
-- 2 Lapis Lazuli
-- 1 Redstone
-- 1 Just Dire Things Time Crystal
+1. Place a Simple or Advanced Time Accelerator.
+2. Select its target or configure the Advanced tier's area.
+3. Supply Forge Energy and any required Time Fluid.
+4. Configure redstone behavior and the desired multiplier.
 
-### Advanced Time Accelerator
+For AE2 integration:
 
-Crafted from:
+1. Store Time Fluid and sufficient power in the ME network.
+2. Insert a Time Acceleration Card into a supported Interface or Pattern Provider.
+3. Choose the acceleration multiplier and operating mode.
+4. On full blocks, open the target-side screen and select every adjacent machine that should be accelerated.
 
-- Just Dire Things Celestigem
-- 2 Clocks
-- 1 Redstone
-- 1 Simple Time Accelerator
-
-Exact layouts are available through JEI/recipe viewers in-game.
-
-## Usage
-
-1. Place a Time Accelerator.
-2. Point the Simple tier at the block you want to accelerate, or configure the Advanced tier's area.
-3. Supply Forge Energy.
-4. Supply Time Fluid if your Just Dire Things configuration requires it for Time Wand acceleration.
-5. Set the machine's redstone mode.
-6. Use the **Wand Speed** controls in the GUI to select the multiplier.
-
-The machines intentionally use Time Wand-style multipliers instead of the normal Just Dire Things machine tick-speed control, so the displayed multiplier is the behavior you get.
+The displayed multiplier is the actual Time Wand-style acceleration rate; there is no hidden machine-speed multiplier layered on top.
 
 ## Building from source
 
@@ -70,14 +67,12 @@ The machines intentionally use Time Wand-style multipliers instead of the normal
 ./gradlew build
 ```
 
-The built jar is written to `build/libs/`.
-
-For local development, the Gradle client run uses the username `Uncraftbar`.
+The built JAR is written to `build/libs/`.
 
 ## License
 
 This project is licensed under the MIT License. See [`LICENSE`](LICENSE).
 
-Some block textures are derived from Just Dire Things textures, which are MIT licensed. See `src/main/resources/assets/jdttimeaccelerators/textures/block/JDT_TEXTURE_LICENSE_NOTICE.txt` for the upstream notice.
+Some block textures are derived from Just Dire Things textures, which are MIT licensed. See `src/main/resources/META-INF/licenses/JDT_TEXTURE_LICENSE_NOTICE.txt` for the upstream notice.
 
-The AE2 Time Acceleration Card texture is adapted from Applied Energistics 2 and is licensed separately under CC BY-NC-SA 3.0. See `src/main/resources/assets/jdttimeaccelerators/textures/item/AE2_TEXTURE_LICENSE_NOTICE.txt` for attribution and license details.
+The AE2 Time Acceleration Card texture is adapted from Applied Energistics 2 and is licensed separately under CC BY-NC-SA 3.0. See `src/main/resources/META-INF/licenses/AE2_TEXTURE_LICENSE_NOTICE.txt` for attribution and license details.

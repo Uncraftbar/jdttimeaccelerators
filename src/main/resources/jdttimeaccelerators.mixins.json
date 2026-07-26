@@ -15,7 +15,6 @@
     "PatternProviderTickerMixin",
     "advancedae.AdvancedPatternProviderLogicMixin",
     "advancedae.AdvancedPatternProviderMenuMixin",
-    "advancedae.SmallAdvancedPatternProviderMenuMixin",
     "advancedae.AdvancedPatternProviderTickerMixin"
   ],
   "client": [

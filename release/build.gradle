@@ -5,6 +5,7 @@ plugins {
 
 def releaseVersion = providers.gradleProperty("releaseVersion").orElse("1.2.0")
 def dryRunEnabled = providers.gradleProperty("dryRun").map { it.toBoolean() }.orElse(true)
+def releaseTargets = providers.gradleProperty("releaseTargets").orElse("all")
 def changelogText = providers.fileContents(layout.projectDirectory.file("CHANGELOG.md")).asText
 def artifactsDirectory = layout.projectDirectory.dir("artifacts")
 def modrinthToken = providers.environmentVariable("MODRINTH_TOKEN")
@@ -14,6 +15,9 @@ def releases = [
         [key: "neoforge_1_21_1", loader: "neoforge", minecraft: "1.21.1"],
         [key: "neoforge_26_1_2", loader: "neoforge", minecraft: "26.1.2"]
 ]
+def activeReleases = releases.findAll {
+    releaseTargets.get() == "all" || it.minecraft == releaseTargets.get()
+}
 
 publishMods {
     changelog = changelogText
@@ -22,7 +26,7 @@ publishMods {
     dryRun = dryRunEnabled
     maxRetries = 5
 
-    releases.each { release ->
+    activeReleases.each { release ->
         def artifactName = "jdttimeaccelerators-${release.loader}-${release.minecraft}-${releaseVersion.get()}.jar"
         def releaseTitle = releaseVersion.map { "JDT Time Accelerators ${it} ${release.minecraft} NeoForge" }
 

@@ -19,6 +19,12 @@ public final class AE2Integration {
         Upgrades.add(card, AEBlocks.INTERFACE, 1, "jdttimeaccelerators.ae2.interfaces");
         Upgrades.add(card, AEParts.INTERFACE, 1, "jdttimeaccelerators.ae2.interfaces");
 
+        // Addon machines must be associated explicitly too. This is the intended AE2
+        // API: the same association controls slot acceptance and the card's generated
+        // compatibility tooltip. Register during common setup, before tooltips are cached.
+        addOptional(card, "expandedae", "exp_pattern_provider", "jdttimeaccelerators.ae2.expandedae_pattern_providers");
+        addOptional(card, "expandedae", "exp_pattern_provider_part", "jdttimeaccelerators.ae2.expandedae_pattern_providers");
+
         // ExtendedAE and MEGA Cells both reuse AE2's PatternProviderLogic/InterfaceLogic.
         addOptional(card, "extendedae", "ex_pattern_provider", "jdttimeaccelerators.ae2.extendedae_pattern_providers");
         addOptional(card, "extendedae", "ex_pattern_provider_part", "jdttimeaccelerators.ae2.extendedae_pattern_providers");
@@ -44,4 +50,5 @@ public final class AE2Integration {
         Item machine = BuiltInRegistries.ITEM.get(id);
         if (machine != null) Upgrades.add(card, machine, 1, group);
     }
+
 }

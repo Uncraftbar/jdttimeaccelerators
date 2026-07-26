@@ -20,7 +20,15 @@ public interface AE2AccelerationHost {
         return this instanceof IUpgradeableObject upgradeable ? upgradeable.getUpgrades() : null;
     }
     BlockEntity jdtta$getHostBlockEntity();
+    /** Natural target sides supplied by the host, used by cable parts. */
     Set<Direction> jdtta$getTargetDirections();
+    boolean jdtta$isTargetSelectionConfigurable();
+    int jdtta$getTargetMask();
+    void jdtta$setTargetMask(int mask);
+    default Set<Direction> jdtta$getSelectedTargetDirections() {
+        if (!jdtta$isTargetSelectionConfigurable()) return jdtta$getTargetDirections();
+        return AE2AccelerationTarget.directions(jdtta$getTargetMask());
+    }
     int jdtta$getSpeedLevel();
     void jdtta$setSpeedLevel(int level);
     boolean jdtta$isConditional();

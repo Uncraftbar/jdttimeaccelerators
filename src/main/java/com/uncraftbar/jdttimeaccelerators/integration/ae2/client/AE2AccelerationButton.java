@@ -16,11 +16,14 @@ import net.minecraft.network.chat.Component;
 public final class AE2AccelerationButton extends IconButton {
     public enum Kind {
         SPEED,
-        MODE
+        PATTERN_MODE,
+        INTERFACE_MODE,
+        TARGET
     }
 
     private final Kind kind;
     private Component state = Component.empty();
+    private Component tooltipState = Component.empty();
     private boolean conditional;
 
     public AE2AccelerationButton(Kind kind, OnPress onPress) {
@@ -30,15 +33,25 @@ public final class AE2AccelerationButton extends IconButton {
 
     public void setState(Component state, boolean conditional) {
         this.state = state;
+        this.tooltipState = state;
+        this.conditional = conditional;
+    }
+
+    public void setState(Component state, Component tooltipState, boolean conditional) {
+        this.state = state;
+        this.tooltipState = tooltipState;
         this.conditional = conditional;
     }
 
     @Override
     protected Icon getIcon() {
-        if (kind == Kind.MODE) {
+        if (kind == Kind.PATTERN_MODE) {
             return conditional ? Icon.CRAFT_HAMMER : Icon.REDSTONE_IGNORE;
         }
-        // Speed draws its multiplier directly so the current setting is visible.
+        if (kind == Kind.INTERFACE_MODE) {
+            return conditional ? Icon.REDSTONE_ON : Icon.REDSTONE_IGNORE;
+        }
+        // Speed and target buttons draw their current value directly.
         return null;
     }
 
@@ -59,7 +72,7 @@ public final class AE2AccelerationButton extends IconButton {
                     .blit(graphics);
         }
 
-        if (kind == Kind.SPEED) {
+        if (kind == Kind.SPEED || kind == Kind.TARGET) {
             var font = Minecraft.getInstance().font;
             int textWidth = font.width(state);
             float scale = Math.min(1.0F, 13.0F / Math.max(1, textWidth));
@@ -87,12 +100,19 @@ public final class AE2AccelerationButton extends IconButton {
 
     @Override
     public List<Component> getTooltipMessage() {
-        Component title = Component.translatable(kind == Kind.SPEED
-                ? "gui.jdttimeaccelerators.ae2.speed"
-                : "gui.jdttimeaccelerators.ae2.mode");
-        Component hint = Component.translatable(kind == Kind.SPEED
-                ? "gui.jdttimeaccelerators.ae2.speed_hint"
-                : "gui.jdttimeaccelerators.ae2.mode_hint");
-        return List.of(title.copy().append(": ").append(state), hint);
+        String titleKey = switch (kind) {
+            case SPEED -> "gui.jdttimeaccelerators.ae2.speed";
+            case TARGET -> "gui.jdttimeaccelerators.ae2.target";
+            default -> "gui.jdttimeaccelerators.ae2.mode";
+        };
+        String hintKey = switch (kind) {
+            case SPEED -> "gui.jdttimeaccelerators.ae2.speed_hint";
+            case TARGET -> "gui.jdttimeaccelerators.ae2.target_hint";
+            case PATTERN_MODE -> "gui.jdttimeaccelerators.ae2.pattern_mode_hint";
+            case INTERFACE_MODE -> "gui.jdttimeaccelerators.ae2.interface_mode_hint";
+        };
+        Component title = Component.translatable(titleKey);
+        Component hint = Component.translatable(hintKey);
+        return List.of(title.copy().append(": ").append(tooltipState), hint);
     }
 }

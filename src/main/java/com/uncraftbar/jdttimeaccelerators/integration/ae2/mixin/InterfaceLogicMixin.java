@@ -16,9 +16,10 @@ import appeng.api.networking.security.IActionSource;
 import appeng.api.upgrades.IUpgradeInventory;
 import appeng.helpers.InterfaceLogic;
 import appeng.helpers.InterfaceLogicHost;
-import appeng.parts.misc.InterfacePart;
+import appeng.parts.AEBasePart;
 import com.uncraftbar.jdttimeaccelerators.integration.ae2.AE2AccelerationEngine;
 import com.uncraftbar.jdttimeaccelerators.integration.ae2.AE2AccelerationHost;
+import com.uncraftbar.jdttimeaccelerators.integration.ae2.AE2AccelerationTarget;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.HolderLookup;
@@ -34,12 +35,14 @@ public abstract class InterfaceLogicMixin implements AE2AccelerationHost {
     @Unique private int jdtta$speedLevel = 1;
     @Unique private boolean jdtta$conditional;
     @Unique private int jdtta$fluidRemainder = 599;
+    @Unique private int jdtta$targetMask = AE2AccelerationTarget.ALL_MASK;
 
     @Inject(method = "writeToNBT", at = @At("TAIL"))
     private void jdtta$write(CompoundTag tag, HolderLookup.Provider registries, CallbackInfo ci) {
         tag.putInt("jdttaSpeedLevel", jdtta$speedLevel);
         tag.putBoolean("jdttaConditional", jdtta$conditional);
         tag.putInt("jdttaFluidRemainder", jdtta$fluidRemainder);
+        tag.putInt("jdttaTargetMask", jdtta$targetMask);
     }
 
     @Inject(method = "readFromNBT", at = @At("TAIL"))
@@ -47,6 +50,9 @@ public abstract class InterfaceLogicMixin implements AE2AccelerationHost {
         jdtta$speedLevel = Math.max(1, tag.getInt("jdttaSpeedLevel"));
         jdtta$conditional = tag.getBoolean("jdttaConditional");
         jdtta$fluidRemainder = tag.contains("jdttaFluidRemainder") ? tag.getInt("jdttaFluidRemainder") : 599;
+        jdtta$targetMask = tag.contains("jdttaTargetMask")
+                ? AE2AccelerationTarget.sanitize(tag.getInt("jdttaTargetMask"))
+                : AE2AccelerationTarget.ALL_MASK;
     }
 
     @Override public IManagedGridNode jdtta$getMainNode() { return mainNode; }
@@ -54,8 +60,14 @@ public abstract class InterfaceLogicMixin implements AE2AccelerationHost {
     @Override public IUpgradeInventory jdtta$getAccelerationUpgrades() { return upgrades; }
     @Override public net.minecraft.world.level.block.entity.BlockEntity jdtta$getHostBlockEntity() { return host.getBlockEntity(); }
     @Override public Set<Direction> jdtta$getTargetDirections() {
-        if (host instanceof InterfacePart part) return EnumSet.of(part.getSide());
+        if (host instanceof AEBasePart part) return EnumSet.of(part.getSide());
         return EnumSet.allOf(Direction.class);
+    }
+    @Override public boolean jdtta$isTargetSelectionConfigurable() { return !(host instanceof AEBasePart); }
+    @Override public int jdtta$getTargetMask() { return jdtta$targetMask; }
+    @Override public void jdtta$setTargetMask(int mask) {
+        jdtta$targetMask = AE2AccelerationTarget.sanitize(mask);
+        host.saveChanges();
     }
     @Override public int jdtta$getSpeedLevel() { return jdtta$speedLevel; }
     @Override public void jdtta$setSpeedLevel(int level) { jdtta$speedLevel = Math.max(1, Math.min(level, AE2AccelerationEngine.maxSpeedLevel())); host.saveChanges(); }

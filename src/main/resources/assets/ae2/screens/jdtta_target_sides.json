@@ -1,0 +1,30 @@
+{
+  "$schema": "schema.json",
+  "includes": ["common/common.json"],
+  "background": {
+    "texture": "guis/priority.png",
+    "srcRect": [0, 0, 176, 125]
+  },
+  "text": {
+    "dialog_title": {
+      "text": {
+        "translate": "gui.jdttimeaccelerators.ae2.select_targets"
+      },
+      "position": {
+        "left": 8,
+        "top": 6
+      }
+    }
+  },
+  "widgets": {
+    "return": {"left": 152, "top": -5, "width": 20, "height": 20},
+    "front": {"left": 79, "top": 48, "width": 16, "height": 16},
+    "back": {"left": 101, "top": 70, "width": 16, "height": 16},
+    "top": {"left": 79, "top": 26, "width": 16, "height": 16},
+    "right": {"left": 57, "top": 48, "width": 16, "height": 16},
+    "bottom": {"left": 79, "top": 70, "width": 16, "height": 16},
+    "left": {"left": 101, "top": 48, "width": 16, "height": 16},
+    "selectAll": {"left": 18, "top": 98, "width": 66, "height": 18},
+    "clear": {"left": 92, "top": 98, "width": 66, "height": 18}
+  }
+}

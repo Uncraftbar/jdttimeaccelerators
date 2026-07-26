@@ -26,7 +26,7 @@ public abstract class AdvancedPatternProviderTickerMixin {
 
     @Inject(method = "getTickingRequest", at = @At("HEAD"), cancellable = true)
     private void jdtta$requestEveryTick(IGridNode node, CallbackInfoReturnable<TickingRequest> cir) {
-        cir.setReturnValue(new TickingRequest(1, 1, !AE2AccelerationEngine.isCardInstalled(jdtta$host())));
+        cir.setReturnValue(new TickingRequest(1, 20, !AE2AccelerationEngine.isCardInstalled(jdtta$host())));
     }
 
     @Inject(method = "tickingRequest", at = @At("HEAD"))
@@ -37,6 +37,8 @@ public abstract class AdvancedPatternProviderTickerMixin {
 
     @Inject(method = "tickingRequest", at = @At("RETURN"), cancellable = true)
     private void jdtta$keepAwake(IGridNode node, int ticks, CallbackInfoReturnable<TickRateModulation> cir) {
-        if (AE2AccelerationEngine.isCardInstalled(jdtta$host())) cir.setReturnValue(TickRateModulation.URGENT);
+        if (AE2AccelerationEngine.shouldTickUrgently(jdtta$host())) {
+            cir.setReturnValue(TickRateModulation.URGENT);
+        }
     }
 }

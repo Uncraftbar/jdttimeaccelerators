@@ -22,8 +22,10 @@ import appeng.api.stacks.KeyCounter;
 import appeng.api.upgrades.IUpgradeInventory;
 import appeng.api.upgrades.IUpgradeableObject;
 import appeng.api.upgrades.UpgradeInventories;
+import appeng.parts.AEBasePart;
 import com.uncraftbar.jdttimeaccelerators.integration.ae2.AE2AccelerationEngine;
 import com.uncraftbar.jdttimeaccelerators.integration.ae2.AE2AccelerationHost;
+import com.uncraftbar.jdttimeaccelerators.integration.ae2.AE2AccelerationTarget;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.HolderLookup;
@@ -40,6 +42,7 @@ public abstract class AdvancedPatternProviderLogicMixin implements AE2Accelerati
     @Unique private int jdtta$speedLevel = 1;
     @Unique private boolean jdtta$conditional;
     @Unique private int jdtta$fluidRemainder = 599;
+    @Unique private int jdtta$targetMask = AE2AccelerationTarget.ALL_MASK;
     @Unique private BlockPos jdtta$requestedTarget;
     @Unique private long jdtta$requestedTargetExpiry;
     @Unique private int jdtta$requestedTargetIdleTicks;
@@ -63,6 +66,7 @@ public abstract class AdvancedPatternProviderLogicMixin implements AE2Accelerati
         tag.putInt("jdttaSpeedLevel", jdtta$speedLevel);
         tag.putBoolean("jdttaConditional", jdtta$conditional);
         tag.putInt("jdttaFluidRemainder", jdtta$fluidRemainder);
+        tag.putInt("jdttaTargetMask", jdtta$targetMask);
         if (jdtta$requestedTarget != null) tag.putLong("jdttaRequestedTarget", jdtta$requestedTarget.asLong());
         tag.putLong("jdttaRequestedTargetExpiry", jdtta$requestedTargetExpiry);
     }
@@ -74,6 +78,9 @@ public abstract class AdvancedPatternProviderLogicMixin implements AE2Accelerati
         jdtta$speedLevel = Math.max(1, tag.getInt("jdttaSpeedLevel"));
         jdtta$conditional = tag.getBoolean("jdttaConditional");
         jdtta$fluidRemainder = tag.contains("jdttaFluidRemainder") ? tag.getInt("jdttaFluidRemainder") : 599;
+        jdtta$targetMask = tag.contains("jdttaTargetMask")
+                ? AE2AccelerationTarget.sanitize(tag.getInt("jdttaTargetMask"))
+                : AE2AccelerationTarget.ALL_MASK;
         jdtta$requestedTarget = tag.contains("jdttaRequestedTarget") ? BlockPos.of(tag.getLong("jdttaRequestedTarget")) : null;
         jdtta$requestedTargetExpiry = tag.getLong("jdttaRequestedTargetExpiry");
     }
@@ -126,6 +133,7 @@ public abstract class AdvancedPatternProviderLogicMixin implements AE2Accelerati
         jdtta$requestedTargetExpiry = be.getLevel().getGameTime() + AE2AccelerationEngine.requestedStaleTimeout();
         jdtta$requestedTargetIdleTicks = 0;
         jdtta$saveChanges();
+        AE2AccelerationEngine.alertTicker(this);
     }
 
     @Unique private Object jdtta$host() {
@@ -163,6 +171,12 @@ public abstract class AdvancedPatternProviderLogicMixin implements AE2Accelerati
     @Override public BlockEntity jdtta$getHostBlockEntity() { return (BlockEntity) jdtta$invoke(jdtta$host(), "getBlockEntity"); }
     @SuppressWarnings("unchecked")
     @Override public Set<Direction> jdtta$getTargetDirections() { return (Set<Direction>) jdtta$invoke(jdtta$host(), "getTargets"); }
+    @Override public boolean jdtta$isTargetSelectionConfigurable() { return !(jdtta$host() instanceof AEBasePart); }
+    @Override public int jdtta$getTargetMask() { return jdtta$targetMask; }
+    @Override public void jdtta$setTargetMask(int mask) {
+        jdtta$targetMask = AE2AccelerationTarget.sanitize(mask);
+        jdtta$saveChanges();
+    }
     @Override public int jdtta$getSpeedLevel() { return jdtta$speedLevel; }
     @Override public void jdtta$setSpeedLevel(int level) { jdtta$speedLevel = Math.max(1, Math.min(level, AE2AccelerationEngine.maxSpeedLevel())); jdtta$saveChanges(); }
     @Override public boolean jdtta$isConditional() { return jdtta$conditional; }

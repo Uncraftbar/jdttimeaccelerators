@@ -6,8 +6,17 @@ on:
       version:
         description: Version shared by every release branch
         required: true
-        default: 1.2.0
+        default: 2.0.0
         type: string
+      minecraft:
+        description: Minecraft version branch to publish
+        required: true
+        default: 1.21.1
+        type: choice
+        options:
+          - 1.21.1
+          - 26.1.2
+          - all
       publish:
         description: Upload to Modrinth, CurseForge, and GitHub Releases (disabled means dry run)
         required: true
@@ -31,19 +40,39 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  prepare:
+    name: Prepare release matrix
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.matrix.outputs.matrix }}
+      artifact_count: ${{ steps.matrix.outputs.artifact_count }}
+    steps:
+      - name: Select release branches
+        id: matrix
+        shell: bash
+        run: |
+          case "${{ inputs.minecraft }}" in
+            1.21.1)
+              echo 'matrix={"include":[{"branch":"1.21.1","java":21,"archive":"jdttimeaccelerators-neoforge-1.21.1"}]}' >> "$GITHUB_OUTPUT"
+              echo 'artifact_count=1' >> "$GITHUB_OUTPUT"
+              ;;
+            26.1.2)
+              echo 'matrix={"include":[{"branch":"26.1.2","java":25,"archive":"jdttimeaccelerators-neoforge-26.1.2"}]}' >> "$GITHUB_OUTPUT"
+              echo 'artifact_count=1' >> "$GITHUB_OUTPUT"
+              ;;
+            all)
+              echo 'matrix={"include":[{"branch":"1.21.1","java":21,"archive":"jdttimeaccelerators-neoforge-1.21.1"},{"branch":"26.1.2","java":25,"archive":"jdttimeaccelerators-neoforge-26.1.2"}]}' >> "$GITHUB_OUTPUT"
+              echo 'artifact_count=2' >> "$GITHUB_OUTPUT"
+              ;;
+          esac
+
   build:
     name: Build ${{ matrix.branch }}
+    needs: prepare
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
-      matrix:
-        include:
-          - branch: '1.21.1'
-            java: 21
-            archive: jdttimeaccelerators-neoforge-1.21.1
-          - branch: '26.1.2'
-            java: 25
-            archive: jdttimeaccelerators-neoforge-26.1.2
+      matrix: ${{ fromJSON(needs.prepare.outputs.matrix) }}
 
     steps:
       - name: Checkout ${{ matrix.branch }}
@@ -95,7 +124,7 @@ jobs:
 
   publish:
     name: ${{ inputs.publish && 'Publish' || 'Dry run' }} ${{ inputs.version }}
-    needs: build
+    needs: [prepare, build]
     runs-on: ubuntu-latest
 
     steps:
@@ -116,7 +145,7 @@ jobs:
         run: |
           find release/artifacts -maxdepth 1 -type f -name '*.jar' -print | sort
           count="$(find release/artifacts -maxdepth 1 -type f -name '*.jar' | wc -l)"
-          test "$count" -eq 2
+          test "$count" -eq "${{ needs.prepare.outputs.artifact_count }}"
 
       - name: Set up Java 21
         uses: actions/setup-java@v4
@@ -145,6 +174,7 @@ jobs:
           fi
           ./release/gradlew -p release --no-daemon "$publish_task" \
             -PreleaseVersion="${{ inputs.version }}" \
+            -PreleaseTargets="${{ inputs.minecraft }}" \
             -PdryRun="$dry_run"
 
       - name: Create or update GitHub Release

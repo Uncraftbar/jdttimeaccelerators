@@ -26,14 +26,14 @@ public abstract class PatternProviderTickerMixin {
         // tracker, but let it start asleep until the card callback alerts the node.
         // This makes every selected multiplier run once per server tick instead of
         // sporadically at AE2's stock interface/provider interval.
-        cir.setReturnValue(new TickingRequest(1, 1,
+        cir.setReturnValue(new TickingRequest(1, 20,
                 !AE2AccelerationEngine.isCardInstalled(host)));
     }
 
     @Inject(method = "tickingRequest", at = @At("HEAD"))
     private void jdtta$accelerate(IGridNode node, int ticks, CallbackInfoReturnable<TickRateModulation> cir) {
         var host = (AE2AccelerationHost) (Object) this$0;
-        if (AE2AccelerationEngine.isCardInstalled(host)) {
+        if (AE2AccelerationEngine.shouldTickUrgently(host)) {
             AE2AccelerationEngine.tick(host);
         }
     }
@@ -41,9 +41,9 @@ public abstract class PatternProviderTickerMixin {
     @Inject(method = "tickingRequest", at = @At("RETURN"), cancellable = true)
     private void jdtta$keepAwake(IGridNode node, int ticks, CallbackInfoReturnable<TickRateModulation> cir) {
         var host = (AE2AccelerationHost) (Object) this$0;
-        if (AE2AccelerationEngine.isCardInstalled(host)) {
-            // Preserve AE2's normal send/return work above, but do not let the node go to sleep
-            // while an acceleration card needs a per-tick callback.
+        if (AE2AccelerationEngine.shouldTickUrgently(host)) {
+            // Preserve AE2's normal send/return work, but keep active acceleration
+            // at the request's one-tick minimum.
             cir.setReturnValue(TickRateModulation.URGENT);
         }
     }
