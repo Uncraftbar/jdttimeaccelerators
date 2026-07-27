@@ -36,6 +36,10 @@ public interface AE2AccelerationHost {
     int jdtta$getFluidRemainder();
     void jdtta$setFluidRemainder(int remainder);
     default boolean jdtta$isPatternProvider() { return false; }
+    /** In Crafting Only mode, restrict acceleration to the adjacent block that
+     * accepted the ingredients instead of treating the selected sides as absolute. */
+    default boolean jdtta$isAcceptedIngredientsOnly() { return false; }
+    default void jdtta$setAcceptedIngredientsOnly(boolean acceptedOnly) {}
     @Nullable BlockPos jdtta$getRequestedTarget();
     void jdtta$setRequestedTarget(@Nullable BlockPos pos, long expiresAt);
     long jdtta$getRequestedTargetExpiry();

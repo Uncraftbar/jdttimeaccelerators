@@ -1,18 +1,23 @@
-# JDT Time Accelerators 2.1.0 — Controlled Acceleration
+# JDT Time Accelerators 2.2.0 - Flexible Crafting Targets
 
-Version 2.1.0 makes acceleration predictable when several standalone machines or AE2 card hosts target the same block, and exposes the new controls through NeoForge's in-game config screen.
+Version 2.2.0 makes Pattern Provider Crafting Only mode practical for input
+hatches, multiblocks, subnet routing, and other setups where the block accepting
+ingredients is not the block that should be accelerated.
 
-## Added
+## Changed
 
-- Added a shared maximum acceleration multiplier setting for standalone Time Accelerators and AE2 Time Acceleration Cards.
-- Added a configurable per-target stack limit. The default of one prevents multiple accelerators from multiplying the speed of the same block during one server tick.
-- Added an in-game configuration screen under **Mods → JDT Time Accelerators → Config** while playing in a local world.
-- Added translated names and descriptions for the acceleration settings.
+- Crafting Only now uses a successful pattern push as the trigger and accelerates
+  every selected adjacent target by default.
+- Added an **Accepted Input Only** targeting mode for setups that should follow
+  the exact adjacent block that accepted the pattern.
+- Updated the in-game AE2 guide with the new targeting behavior and controls.
 
 ## Fixed
 
-- Prevented standalone machines and AE2 card hosts from bypassing the shared stack limit when targeting the same block.
-- Prevented rejected or failed acceleration attempts from consuming Forge Energy, AE power, or Time Fluid.
-- Corrected the documented config path to `config/jdttimeaccelerators-server.toml`.
+- Fixed target-side buttons retaining their hovered appearance after being
+  clicked.
+- Reworked the target-selection layout so the targeting-mode button no longer
+  overlaps the side controls.
+- Preserved Pattern Provider GUI compatibility with supported AE2 addons.
 
 This release targets Minecraft 1.21.1 on NeoForge.

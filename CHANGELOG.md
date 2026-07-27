@@ -1,5 +1,21 @@
 # Changelog
 
+## 2.2.0
+
+### Changed
+
+- Changed Pattern Provider Crafting Only mode to accelerate every selected side
+  after a successful pattern push, regardless of which side accepted it.
+- Added an optional Accepted Ingredients Only target mode that preserves the
+  previous output-following behavior.
+- Updated the in-game AE2 guide to explain Pattern Provider targeting modes.
+
+### Fixed
+
+- Fixed target-side buttons retaining their hovered appearance after being
+  clicked.
+- Fixed the targeting-mode button overlapping the side-selection controls.
+
 ## 2.1.0
 
 ### Added

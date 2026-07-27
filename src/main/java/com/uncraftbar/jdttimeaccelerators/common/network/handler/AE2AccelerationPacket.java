@@ -18,6 +18,8 @@ public final class AE2AccelerationPacket {
                 case AE2AccelerationPayload.CYCLE_SPEED -> menu.jdtta$cycleSpeed(payload.backwards());
                 case AE2AccelerationPayload.TOGGLE_CONDITIONAL -> menu.jdtta$toggleConditional();
                 case AE2AccelerationPayload.SET_TARGET_MASK -> menu.jdtta$setTargetMask(payload.value());
+                case AE2AccelerationPayload.TOGGLE_ACCEPTED_INGREDIENTS_ONLY ->
+                        menu.jdtta$toggleAcceptedIngredientsOnly();
                 default -> { }
             }
         });

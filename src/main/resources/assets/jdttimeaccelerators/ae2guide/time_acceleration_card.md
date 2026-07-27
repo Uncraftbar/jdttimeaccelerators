@@ -50,8 +50,21 @@ only target is the block directly in front of the installed part.
 ## Pattern Provider Modes
 
 - **Always** accelerates every eligible target on the selected sides.
-- **Crafting Only** follows the exact adjacent machine that accepted the most
-  recent pattern push. Its side must still be selected.
+- **Crafting Only** accelerates every eligible target on the selected sides
+  after a pattern is accepted. The accepted output side only triggers the
+  operation; it does not override the selected acceleration targets and does
+  not need to be selected itself.
+
+Pattern Providers show a targeting-mode button on the target screen:
+
+- **All Selected Sides** is the default. Crafting Only accelerates every selected
+  side after any pattern is accepted.
+- **Accepted Input Only** restores output-following behavior. Crafting Only
+  accelerates the exact adjacent block that accepted the most recent pattern,
+  provided that block's side is selected.
+
+This targeting-mode button affects Crafting Only. Always mode continues to
+accelerate every selected side.
 
 ## Interface Modes
 

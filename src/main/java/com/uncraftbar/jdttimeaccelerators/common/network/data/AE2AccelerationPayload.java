@@ -13,6 +13,7 @@ public record AE2AccelerationPayload(int action, boolean backwards, int value) i
     public static final int CYCLE_SPEED = 0;
     public static final int TOGGLE_CONDITIONAL = 1;
     public static final int SET_TARGET_MASK = 2;
+    public static final int TOGGLE_ACCEPTED_INGREDIENTS_ONLY = 3;
     public static final Type<AE2AccelerationPayload> TYPE = new Type<>(
             ResourceLocation.fromNamespaceAndPath(JDTTimeAccelerators.MODID, "ae2_acceleration_config"));
     public static final StreamCodec<FriendlyByteBuf, AE2AccelerationPayload> STREAM_CODEC = StreamCodec.composite(

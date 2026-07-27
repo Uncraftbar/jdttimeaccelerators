@@ -37,10 +37,13 @@ final class AE2TargetSideButton extends IconButton {
     @Override
     public void renderWidget(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
         if (!visible) return;
-        int hoverOffset = isHoveredOrFocused() ? 1 : 0;
+        // Minecraft keeps the last clicked widget focused. Using focus for the visual
+        // state made a deselected side continue to look blue/pressed until the player
+        // clicked somewhere else in the GUI.
+        int hoverOffset = isHovered() ? 1 : 0;
         Icon background = selected
                 ? Icon.TOOLBAR_BUTTON_BACKGROUND_FOCUS
-                : isHoveredOrFocused()
+                : isHovered()
                         ? Icon.TOOLBAR_BUTTON_BACKGROUND_HOVER
                         : Icon.TOOLBAR_BUTTON_BACKGROUND;
         background.getBlitter()

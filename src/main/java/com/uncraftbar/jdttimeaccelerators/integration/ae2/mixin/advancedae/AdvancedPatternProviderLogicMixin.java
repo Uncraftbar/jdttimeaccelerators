@@ -43,6 +43,7 @@ public abstract class AdvancedPatternProviderLogicMixin implements AE2Accelerati
     @Unique private boolean jdtta$conditional;
     @Unique private int jdtta$fluidRemainder = 599;
     @Unique private int jdtta$targetMask = AE2AccelerationTarget.ALL_MASK;
+    @Unique private boolean jdtta$acceptedIngredientsOnly;
     @Unique private BlockPos jdtta$requestedTarget;
     @Unique private long jdtta$requestedTargetExpiry;
     @Unique private int jdtta$requestedTargetIdleTicks;
@@ -67,6 +68,7 @@ public abstract class AdvancedPatternProviderLogicMixin implements AE2Accelerati
         tag.putBoolean("jdttaConditional", jdtta$conditional);
         tag.putInt("jdttaFluidRemainder", jdtta$fluidRemainder);
         tag.putInt("jdttaTargetMask", jdtta$targetMask);
+        tag.putBoolean("jdttaAcceptedIngredientsOnly", jdtta$acceptedIngredientsOnly);
         if (jdtta$requestedTarget != null) tag.putLong("jdttaRequestedTarget", jdtta$requestedTarget.asLong());
         tag.putLong("jdttaRequestedTargetExpiry", jdtta$requestedTargetExpiry);
     }
@@ -81,6 +83,7 @@ public abstract class AdvancedPatternProviderLogicMixin implements AE2Accelerati
         jdtta$targetMask = tag.contains("jdttaTargetMask")
                 ? AE2AccelerationTarget.sanitize(tag.getInt("jdttaTargetMask"))
                 : AE2AccelerationTarget.ALL_MASK;
+        jdtta$acceptedIngredientsOnly = tag.getBoolean("jdttaAcceptedIngredientsOnly");
         jdtta$requestedTarget = tag.contains("jdttaRequestedTarget") ? BlockPos.of(tag.getLong("jdttaRequestedTarget")) : null;
         jdtta$requestedTargetExpiry = tag.getLong("jdttaRequestedTargetExpiry");
     }
@@ -181,6 +184,11 @@ public abstract class AdvancedPatternProviderLogicMixin implements AE2Accelerati
     @Override public void jdtta$setSpeedLevel(int level) { jdtta$speedLevel = Math.max(1, Math.min(level, AE2AccelerationEngine.maxSpeedLevel())); jdtta$saveChanges(); }
     @Override public boolean jdtta$isConditional() { return jdtta$conditional; }
     @Override public void jdtta$setConditional(boolean conditional) { jdtta$conditional = conditional; jdtta$saveChanges(); }
+    @Override public boolean jdtta$isAcceptedIngredientsOnly() { return jdtta$acceptedIngredientsOnly; }
+    @Override public void jdtta$setAcceptedIngredientsOnly(boolean acceptedOnly) {
+        jdtta$acceptedIngredientsOnly = acceptedOnly;
+        jdtta$saveChanges();
+    }
     @Override public int jdtta$getFluidRemainder() { return jdtta$fluidRemainder; }
     @Override public void jdtta$setFluidRemainder(int remainder) { jdtta$fluidRemainder = remainder; jdtta$saveChanges(); }
     @Override public boolean jdtta$isPatternProvider() { return true; }

@@ -11,6 +11,7 @@ import appeng.client.gui.AEBaseScreen;
 import appeng.client.gui.AESubScreen;
 import appeng.client.gui.Icon;
 import appeng.client.gui.widgets.TabButton;
+import appeng.client.gui.widgets.AE2Button;
 import appeng.menu.AEBaseMenu;
 import appeng.menu.SlotSemantics;
 import com.direwolf20.justdirethings.datagen.JustDireBlockTags;
@@ -33,11 +34,15 @@ public final class AE2TargetSideScreen<C extends AEBaseMenu, P extends AEBaseScr
     private final AE2AccelerationMenu accelerationMenu;
     private final Map<Direction, AE2TargetSideButton> sideButtons = new EnumMap<>(Direction.class);
     private int targetMask;
+    private boolean acceptedIngredientsOnly;
+    private AE2Button targetModeButton;
 
     private AE2TargetSideScreen(P parent, AE2AccelerationMenu accelerationMenu) {
         super(parent, "/screens/jdtta_target_sides.json");
         this.accelerationMenu = accelerationMenu;
         this.targetMask = AE2AccelerationTarget.sanitize(accelerationMenu.jdtta$getSyncedTargetMask());
+        this.acceptedIngredientsOnly =
+                accelerationMenu.jdtta$getSyncedAcceptedIngredientsOnly();
 
         widgets.add("return", new TabButton(Icon.BACK,
                 Component.translatable("gui.jdttimeaccelerators.ae2.target"), button -> returnToParent()));
@@ -49,6 +54,11 @@ public final class AE2TargetSideScreen<C extends AEBaseMenu, P extends AEBaseScr
         widgets.addButton("clear",
                 Component.translatable("gui.jdttimeaccelerators.ae2.clear"),
                 () -> setMask(0));
+        if (accelerationMenu.jdtta$isPatternProviderMenu()) {
+            targetModeButton = widgets.addButton("targetMode",
+                    targetModeLabel(), this::toggleTargetMode);
+            updateTargetModeButton();
+        }
 
         BlockEntity host = accelerationMenu.jdtta$getHostBlockEntity();
         BlockOrientation orientation = host instanceof AEBaseBlockEntity aeHost
@@ -89,6 +99,28 @@ public final class AE2TargetSideScreen<C extends AEBaseMenu, P extends AEBaseScr
                 button.setSelected(AE2AccelerationTarget.contains(targetMask, direction)));
         PacketDistributor.sendToServer(new AE2AccelerationPayload(
                 AE2AccelerationPayload.SET_TARGET_MASK, false, targetMask));
+    }
+
+    private void toggleTargetMode() {
+        acceptedIngredientsOnly = !acceptedIngredientsOnly;
+        updateTargetModeButton();
+        PacketDistributor.sendToServer(new AE2AccelerationPayload(
+                AE2AccelerationPayload.TOGGLE_ACCEPTED_INGREDIENTS_ONLY, false));
+    }
+
+    private void updateTargetModeButton() {
+        if (targetModeButton == null) return;
+        targetModeButton.setMessage(targetModeLabel());
+        targetModeButton.setTooltip(net.minecraft.client.gui.components.Tooltip.create(
+                Component.translatable(acceptedIngredientsOnly
+                        ? "gui.jdttimeaccelerators.ae2.accepted_only_hint"
+                        : "gui.jdttimeaccelerators.ae2.selected_sides_hint")));
+    }
+
+    private Component targetModeLabel() {
+        return Component.translatable(acceptedIngredientsOnly
+                ? "gui.jdttimeaccelerators.ae2.accepted_only"
+                : "gui.jdttimeaccelerators.ae2.selected_sides");
     }
 
     private static ItemStack getDisplayStack(BlockEntity host, Direction direction) {

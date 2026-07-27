@@ -83,11 +83,15 @@ public final class AE2AccelerationEngine {
 
         if (host.jdtta$isConditional() && host.jdtta$isPatternProvider()) {
             BlockPos requested = host.jdtta$getRequestedTarget();
-            // A successful push identifies the exact target. This is adaptive rather than a
-            // fixed 30-second effect: it stops within a few ticks of completion, while observed
-            // progress keeps refreshing the stale-target timeout for genuinely long jobs.
+            // A successful push arms Crafting Only. By default the selected sides are absolute
+            // targets; the accepted position is retained as the trigger and for the optional
+            // Accepted Ingredients Only mode.
             if (requested == null || level.getGameTime() > host.jdtta$getRequestedTargetExpiry()) {
                 clearRequestedTarget(host);
+                return;
+            }
+            if (!host.jdtta$isAcceptedIngredientsOnly()) {
+                accelerateSelectedRequest(host, level);
                 return;
             }
             BlockPos hostPos = be.getBlockPos();
@@ -115,6 +119,50 @@ public final class AE2AccelerationEngine {
             BlockPos target = be.getBlockPos().relative(direction);
             accelerate(host, level, target);
         }
+    }
+
+    private static void accelerateSelectedRequest(AE2AccelerationHost host, ServerLevel level) {
+        BlockPos hostPos = host.jdtta$getHostBlockEntity().getBlockPos();
+        boolean acceleratedAny = false;
+        boolean alreadyAcceleratedAny = false;
+        boolean observedWork = false;
+
+        for (Direction direction : host.jdtta$getSelectedTargetDirections()) {
+            BlockPos targetPos = hostPos.relative(direction);
+            BlockEntity target = level.getBlockEntity(targetPos);
+            if (target == null) continue;
+
+            long before = machineFingerprint(target, level);
+            AccelerationResult result = accelerate(host, level, targetPos);
+            if (result == AccelerationResult.ALREADY_ACCELERATED) {
+                alreadyAcceleratedAny = true;
+                continue;
+            }
+            if (result != AccelerationResult.ACCELERATED) continue;
+
+            acceleratedAny = true;
+            observedWork |= before != machineFingerprint(target, level);
+        }
+
+        if (observedWork) {
+            host.jdtta$setRequestedTargetIdleTicks(0);
+            host.jdtta$setRequestedTarget(
+                    host.jdtta$getRequestedTarget(),
+                    level.getGameTime() + REQUEST_STALE_TIMEOUT);
+            return;
+        }
+
+        // A competing accelerator may be doing the useful work this tick. Preserve the
+        // request and let the stale timeout remain the ultimate bound.
+        if (alreadyAcceleratedAny) return;
+        if (!acceleratedAny) {
+            clearRequestedTarget(host);
+            return;
+        }
+
+        int idleTicks = host.jdtta$getRequestedTargetIdleTicks() + 1;
+        host.jdtta$setRequestedTargetIdleTicks(idleTicks);
+        if (idleTicks >= REQUEST_IDLE_GRACE_TICKS) clearRequestedTarget(host);
     }
 
     private static void accelerateRequested(AE2AccelerationHost host, ServerLevel level, BlockPos targetPos) {

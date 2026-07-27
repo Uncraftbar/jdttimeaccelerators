@@ -41,10 +41,10 @@ public abstract class PatternProviderLogicMixin implements AE2AccelerationHost {
     @Unique private boolean jdtta$conditional;
     @Unique private int jdtta$fluidRemainder = 599;
     @Unique private int jdtta$targetMask = AE2AccelerationTarget.ALL_MASK;
+    @Unique private boolean jdtta$acceptedIngredientsOnly;
     @Unique private BlockPos jdtta$requestedTarget;
     @Unique private long jdtta$requestedTargetExpiry;
     @Unique private int jdtta$requestedTargetIdleTicks;
-    @Unique private BlockPos jdtta$pushCandidateTarget;
 
     @Inject(method = "<init>(Lappeng/api/networking/IManagedGridNode;Lappeng/helpers/patternprovider/PatternProviderLogicHost;I)V", at = @At("TAIL"))
     private void jdtta$initUpgrades(IManagedGridNode node, PatternProviderLogicHost host, int slots, CallbackInfo ci) {
@@ -62,6 +62,7 @@ public abstract class PatternProviderLogicMixin implements AE2AccelerationHost {
         tag.putBoolean("jdttaConditional", jdtta$conditional);
         tag.putInt("jdttaFluidRemainder", jdtta$fluidRemainder);
         tag.putInt("jdttaTargetMask", jdtta$targetMask);
+        tag.putBoolean("jdttaAcceptedIngredientsOnly", jdtta$acceptedIngredientsOnly);
         if (jdtta$requestedTarget != null) tag.putLong("jdttaRequestedTarget", jdtta$requestedTarget.asLong());
         tag.putLong("jdttaRequestedTargetExpiry", jdtta$requestedTargetExpiry);
     }
@@ -76,6 +77,7 @@ public abstract class PatternProviderLogicMixin implements AE2AccelerationHost {
         jdtta$targetMask = tag.contains("jdttaTargetMask")
                 ? AE2AccelerationTarget.sanitize(tag.getInt("jdttaTargetMask"))
                 : AE2AccelerationTarget.ALL_MASK;
+        jdtta$acceptedIngredientsOnly = tag.getBoolean("jdttaAcceptedIngredientsOnly");
         jdtta$requestedTarget = tag.contains("jdttaRequestedTarget") ? BlockPos.of(tag.getLong("jdttaRequestedTarget")) : null;
         jdtta$requestedTargetExpiry = tag.getLong("jdttaRequestedTargetExpiry");
     }
@@ -90,16 +92,19 @@ public abstract class PatternProviderLogicMixin implements AE2AccelerationHost {
         var be = host.getBlockEntity();
         var level = be.getLevel();
         if (level == null || sendDirection == null) return;
-        jdtta$requestedTarget = be.getBlockPos().relative(sendDirection);
-        jdtta$requestedTargetExpiry = level.getGameTime() + AE2AccelerationEngine.requestedStaleTimeout();
-        jdtta$resetRequestedTracking();
-        host.saveChanges();
-        AE2AccelerationEngine.alertTicker(this);
+        jdtta$rememberTarget(be.getBlockPos().relative(sendDirection));
     }
 
     @Unique
-    private void jdtta$resetRequestedTracking() {
+    private void jdtta$rememberTarget(BlockPos target) {
+        var level = host.getBlockEntity().getLevel();
+        if (level == null) return;
+        jdtta$requestedTarget = target;
+        jdtta$requestedTargetExpiry =
+                level.getGameTime() + AE2AccelerationEngine.requestedStaleTimeout();
         jdtta$requestedTargetIdleTicks = 0;
+        host.saveChanges();
+        AE2AccelerationEngine.alertTicker(this);
     }
 
     @Inject(method = "addDrops", at = @At("TAIL"))
@@ -128,6 +133,11 @@ public abstract class PatternProviderLogicMixin implements AE2AccelerationHost {
     @Override public void jdtta$setSpeedLevel(int level) { jdtta$speedLevel = Math.max(1, Math.min(level, AE2AccelerationEngine.maxSpeedLevel())); host.saveChanges(); }
     @Override public boolean jdtta$isConditional() { return jdtta$conditional; }
     @Override public void jdtta$setConditional(boolean conditional) { jdtta$conditional = conditional; host.saveChanges(); }
+    @Override public boolean jdtta$isAcceptedIngredientsOnly() { return jdtta$acceptedIngredientsOnly; }
+    @Override public void jdtta$setAcceptedIngredientsOnly(boolean acceptedOnly) {
+        jdtta$acceptedIngredientsOnly = acceptedOnly;
+        host.saveChanges();
+    }
     @Override public int jdtta$getFluidRemainder() { return jdtta$fluidRemainder; }
     @Override public void jdtta$setFluidRemainder(int remainder) { jdtta$fluidRemainder = remainder; host.saveChanges(); }
     @Override public boolean jdtta$isPatternProvider() { return true; }
